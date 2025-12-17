@@ -8,7 +8,7 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { UserServices } from './user.service';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
-import ProviderService from '../providerService/providerService.service';
+import ProviderService from '../service/service.service';
 
 // *************USER CONTROLLERS*********
 // AllUsers
