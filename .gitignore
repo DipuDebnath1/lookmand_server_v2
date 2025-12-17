@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.vercel
+logs
+public
+
+serviceAccountKey.json

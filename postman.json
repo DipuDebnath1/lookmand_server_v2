@@ -1,0 +1,356 @@
+{
+	"info": {
+		"_postman_id": "bcad3e76-ec3a-4f27-8e01-69488dbb2733",
+		"name": "ts_module_server",
+		"description": "Postman collection for API v1 routes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "35002653",
+		"_collection_link": "https://dipudebnath1.postman.co/workspace/quantam-Workspace~86818cce-5cff-44fc-8439-f19c73c540ec/collection/35002653-bcad3e76-ec3a-4f27-8e01-69488dbb2733?action=share&source=collection_link&creator=35002653"
+	},
+	"item": [
+		{
+			"name": "Authentication Routes",
+			"item": [
+				{
+					"name": "User Signup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "postman-cloud:///1efd5924-b649-4840-81ad-f4a72d466307"
+								},
+								{
+									"key": "name",
+									"value": "user123"
+								},
+								{
+									"key": "email",
+									"value": "dipudebnath966@gmail.com"
+								},
+								{
+									"key": "password",
+									"value": "1qazxsw2"
+								},
+								{
+									"key": "phone",
+									"value": "01525252525",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User Signin",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"dipudebnath966@gmail.com\",\r\n    \"password\":\"1qazxsw2\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signin",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "OAuth Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjJkN2VkMzM4YzBmMTQ1N2IyMTRhMjc0YjVlMGU2NjdiNDRhNDJkZGUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI5MDEzMDcyNjEwMS1nYWVibGw5Y3Z2NWh0Z2g4cWJlbzhqZTZvOGtsNGxrYS5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsImF1ZCI6IjkwMTMwNzI2MTAxLWdhZWJsbDljdnY1aHRnaDhxYmVvOGplNm84a2w0bGthLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTEwMDcxOTk1NDY1MzEyMjY5OTY1IiwiZW1haWwiOiJxYWdwdDVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5iZiI6MTc1Njk3ODczNiwibmFtZSI6IlF1YW50dW0gQWxsaWFuY2UgR1BUIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0phaThYN3otamotQUZGRVRxT1JwTWFvYnQxZWNqY1RQd1VpS0M4a1Z2d3hpaWozZU09czk2LWMiLCJnaXZlbl9uYW1lIjoiUXVhbnR1bSBBbGxpYW5jZSBHUFQiLCJpYXQiOjE3NTY5NzkwMzYsImV4cCI6MTc1Njk4MjYzNiwianRpIjoiN2Y0YmE3M2ZkODM0ZmFhOTA4ODc2MjA2NzhmYjk1ZjcyOWZkMDJlZiJ9.N8Qx0dpgHYdURAD7G1hhfZr1gzX4mbp-73g9isxwQgNaKsMclgwDJeM1vySoWopWuw8x2wgPi-gUzVymo2kENa7Cx_Z-8DB16NqhI1Yg3BZfSLlohEtSREbvrGVOC1fdNoLwZqxt9s_7mtSB_xjQPRDoYXLPe8JGmPAkCYUAqQOYEQVzG3SBquXcxbTqjZIor7cNcyy1bE0Nfs8VbvXavhCc4UyaBMuwZXMKPCdA_cYKfljLSn18z08bGlugHZgt0SeCKeb3r_PRAIjdNlwUQQo1dRdlNMigMTmbtJgw26GsLpJ1zQ0PNTVTV_EM958JUJ63yCvYrQJehmJDRfQt8w\",\r\n    \"provider\":\"google\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login_with_oauth",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login_with_oauth"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "OTP Verification",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"dipudebnath966@gmail.com\",\r\n    \"oneTimeCode\":\"613945\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify_otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"verify_otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n     \"email\":\"dipudebnath966@gmail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/forgot_password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"forgot_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/reset_password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"reset_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/update_password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"update_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh User Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/refresh_token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh_token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test Server",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://10.10.11.79:8006",
+							"protocol": "http",
+							"host": [
+								"10",
+								"10",
+								"11",
+								"79"
+							],
+							"port": "8006"
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Routes",
+			"item": [
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/path/to/profile-image.jpg"
+								},
+								{
+									"key": "name",
+									"value": "Updated Name"
+								},
+								{
+									"key": "email",
+									"value": "updated@example.com"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/user/update-profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"update-profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://10.10.11.79:8006/api/v1"
+		},
+		{
+			"key": "googleToken",
+			"value": "\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjJkN2VkMzM4YzBmMTQ1N2IyMTRhMjc0YjVlMGU2NjdiNDRhNDJkZGUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI5MDEzMDcyNjEwMS1nYWVibGw5Y3Z2NWh0Z2g4cWJlbzhqZTZvOGtsNGxrYS5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsImF1ZCI6IjkwMTMwNzI2MTAxLWdhZWJsbDljdnY1aHRnaDhxYmVvOGplNm84a2w0bGthLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTEwMDcxOTk1NDY1MzEyMjY5OTY1IiwiZW1haWwiOiJxYWdwdDVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5iZiI6MTc1Njk3ODczNiwibmFtZSI6IlF1YW50dW0gQWxsaWFuY2UgR1BUIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0phaThYN3otamotQUZGRVRxT1JwTWFvYnQxZWNqY1RQd1VpS0M4a1Z2d3hpaWozZU09czk2LWMiLCJnaXZlbl9uYW1lIjoiUXVhbnR1bSBBbGxpYW5jZSBHUFQiLCJpYXQiOjE3NTY5NzkwMzYsImV4cCI6MTc1Njk4MjYzNiwianRpIjoiN2Y0YmE3M2ZkODM0ZmFhOTA4ODc2MjA2NzhmYjk1ZjcyOWZkMDJlZiJ9.N8Qx0dpgHYdURAD7G1hhfZr1gzX4mbp-73g9isxwQgNaKsMclgwDJeM1vySoWopWuw8x2wgPi-gUzVymo2kENa7Cx_Z-8DB16NqhI1Yg3BZfSLlohEtSREbvrGVOC1fdNoLwZqxt9s_7mtSB_xjQPRDoYXLPe8JGmPAkCYUAqQOYEQVzG3SBquXcxbTqjZIor7cNcyy1bE0Nfs8VbvXavhCc4UyaBMuwZXMKPCdA_cYKfljLSn18z08bGlugHZgt0SeCKeb3r_PRAIjdNlwUQQo1dRdlNMigMTmbtJgw26GsLpJ1zQ0PNTVTV_EM958JUJ63yCvYrQJehmJDRfQt8w\"",
+			"type": "string"
+		}
+	]
+}
