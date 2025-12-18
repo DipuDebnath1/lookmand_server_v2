@@ -1,6 +1,9 @@
 import { Document } from 'mongoose';
+import { Region } from './const';
+import { allRoles } from '../../utils/roles';
 
-export type TRoles = 'user' | 'admin' | 'provider' | 'superAdmin';
+export type RoleKey = keyof typeof allRoles;
+export type TRoles = (typeof allRoles)[RoleKey][number];
 
 export interface IUser {
   name: string;
@@ -12,7 +15,7 @@ export interface IUser {
   isPhoneVerified: boolean;
   password: string;
   location: string;
-  region: 'north' | 'south' | 'east' | 'west';
+  region: keyof typeof Region;
   oneTimeCode: string | null;
   isResetPassword: boolean;
   fcmToken: string | null;

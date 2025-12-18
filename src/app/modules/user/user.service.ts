@@ -7,9 +7,8 @@ import { TUser } from './user.interface';
 import { User } from './user.model';
 import { sendOtpVerificationMail } from '../../../config/mailService/sendOtp';
 import generateOtp from '../../utils/genarateOtp';
-import QueryService from '../../../service/QueryService';
+import { UserBaseService } from '../../../service';
 
-const UserQuery = new QueryService(User);
 // **********USER SERVICES**********
 
 // create User
@@ -84,7 +83,7 @@ const getAllUsers = async (query: any) => {
   if (query.role && allowRoles.includes(query.role)) {
     filter.role = query.role;
   }
-  const result = await UserQuery.findWithQueryParams({
+  const result = await UserBaseService.findMany({
     filters: filter,
     ...query,
     select: 'name email role image phone createdAt',
@@ -102,16 +101,6 @@ const deleteAccount = async (userId: string) => {
   await user.save();
   return user;
 };
-
-// const updateAll = async () => {
-//   const res = await User.updateMany(
-//     {},
-//     { image: 'users/scaled_35-1763441494935.jpg' },
-//   );
-//   console.log(res);
-// };
-
-// updateAll();
 
 export const UserServices = {
   createUser,

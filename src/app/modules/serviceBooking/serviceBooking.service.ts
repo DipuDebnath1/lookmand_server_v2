@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import { PipelineStage, Types } from 'mongoose';
-import QueryService from '../../../service/QueryService';
 import AppError from '../../ErrorHandler/AppError';
 import dashboardService from '../dashboard/dashboard.service';
-import Service from '../providerService/providerService.model';
 import ServiceBooking from './serviceBooking.model';
 import { IServiceBooking } from './serviceBooking.type';
+import Service from '../service/service.model';
+import { BookingBaseService } from '../../../service';
 const ObjectId = Types.ObjectId;
-const ServiceBookingQuery = new QueryService(ServiceBooking);
-const ServiceQuery = new QueryService(Service);
 
 dashboardService.dashboardServiceStatistics();
 
@@ -32,7 +30,7 @@ const getUserBookings = async (userId: string, query: any) => {
       populate: [{ path: 'subCategory', select: 'name' }],
     },
   ];
-  const bookings = await ServiceBookingQuery.findWithQueryParams({
+  const bookings = await BookingBaseService.findWithPagination({
     filters: filter,
     select,
     ...query,
@@ -127,7 +125,7 @@ const getProviderServiceBookingRequests = async (
       },
     },
   });
-  const res = await ServiceQuery.aggregateWithPagination(pipeline, query);
+  const res = await BookingBaseService.aggregateWithPagination(pipeline, query);
   return res;
 };
 

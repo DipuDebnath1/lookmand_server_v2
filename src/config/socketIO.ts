@@ -1,18 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import AppError from '../app/ErrorHandler/AppError';
-import httpStatus from 'http-status';
 import { logger } from '../app/logger';
 import { accessTokenDecoded } from '../app/modules/tokens/tokenDecoded';
 import { User } from '../app/modules/user';
+import { SocketRoomId } from '../service/const';
+import SocketService from '../service/socketService';
+
+export const onlineUsers: Map<string, string> = new Map(); // userId -> socketId
 
 const socketIO = (io: Server): void => {
   // Authentication middleware - runs before connection
   io.use(async (socket: Socket, next) => {
-    // console.log(socket);
     try {
       const token =
+        socket.handshake.headers.authorization ||
         (socket.handshake.auth as { token?: string }).token ||
         (socket.handshake.query.token as string | undefined);
 
@@ -29,8 +33,9 @@ const socketIO = (io: Server): void => {
       }
 
       // Verify JWT token and detect activity
-      const decoded = accessTokenDecoded(token) as JwtPayload | null;
+      const decoded = accessTokenDecoded(token) as JwtPayload;
 
+      //  Check if decoding was successful
       if (!decoded) {
         logger.warn(
           `Authentication failed: Invalid token format for socket ${socket.id}`,
@@ -43,9 +48,6 @@ const socketIO = (io: Server): void => {
         );
       }
 
-      logger.info(
-        `Token verified for socket ${socket.id}, user: ${JSON.stringify(decoded)}`,
-      );
       // You could attach decoded info to socket
       (socket as any).user = await User.findById(decoded.sub).select(
         'role isDeleted',
@@ -64,7 +66,6 @@ const socketIO = (io: Server): void => {
         );
       }
 
-      // User is authenticated and active
       next(); // Allow connection
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -83,10 +84,27 @@ const socketIO = (io: Server): void => {
   });
 
   io.on('connection', (socket: Socket) => {
-    logger.info(`Socket connected: ID ${socket.id}`);
-    // const user = (socket as any).user;
+    const userId = (socket as any).user._id.toString();
+    onlineUsers.set(userId, socket.id);
 
+    logger.info(`Socket connected: ID ${socket.id} for User ID ${userId}`);
+
+    // Send unread notification count to the connected user
+    SocketService.sendUnreadNotificationCount(userId);
+    // Send unread notification count to the connected user
+    socket.on(SocketRoomId.UnreadNotificationCount, () =>
+      SocketService.sendUnreadNotificationCount(userId),
+    );
+    // Notify all clients about updated online users
+    SocketService.sendOnlineUsers();
+    // Send online users list
+    socket.on(SocketRoomId.OnlineUsers, () => SocketService.sendOnlineUsers());
+
+    // Handle disconnection
     socket.on('disconnect', () => {
+      onlineUsers.delete(userId);
+      // Notify all clients about updated online users
+      SocketService.sendOnlineUsers();
       logger.info(`Socket disconnected: ID ${socket.id}`);
     });
   });

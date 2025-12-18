@@ -6,6 +6,7 @@ import { Schema, model } from 'mongoose';
 import bcrypt from 'bcrypt';
 import { TUser } from './user.interface';
 import { roles } from '../../utils/roles';
+import { Region, Roles } from './const';
 
 // Simple User Schema
 const userSchema = new Schema<TUser>(
@@ -17,7 +18,7 @@ const userSchema = new Schema<TUser>(
     role: {
       type: String,
       enum: roles,
-      default: 'user',
+      default: Roles.USER,
       required: false,
     },
     email: {
@@ -50,7 +51,7 @@ const userSchema = new Schema<TUser>(
     },
     region: {
       type: String,
-      enum: ['north', 'south', 'east', 'west'],
+      enum: Object.keys(Region),
       required: false,
     },
     location: {

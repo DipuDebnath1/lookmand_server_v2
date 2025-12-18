@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/modules/providerService/providerService.service.ts
 
 import httpStatus from 'http-status';
 import { PipelineStage, Types } from 'mongoose';
 import config from '../../../config';
-import QueryService from '../../../service/QueryService';
-import Roles from '../../const/Roles';
 import AppError from '../../ErrorHandler/AppError';
 import businessProfileService from '../businessProfile/businessProfile.service';
 import Notification from '../notification/notification.model';
@@ -13,11 +10,11 @@ import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionP
 import { TRoles } from '../user';
 import Service from './service.model';
 import { IService } from './service.type';
+import { Roles } from '../user/const';
+import { ProviderBaseService } from '../../../service';
 const { providerServiceCreateLimit } = config;
 
 const ObjectId = Types.ObjectId;
-
-const ServiceQuery = new QueryService(Service);
 
 // Create a new service by provider
 const createService = async (
@@ -98,85 +95,6 @@ const createService = async (
   });
 
   return newService;
-};
-
-// get all service requested by admin
-const getAllServicesApprovalRequestedB = async (query?: any) => {
-  const pipeline = [
-    {
-      $match: { status: 'pending', isDeleted: false },
-    },
-    {
-      $lookup: {
-        from: 'businessprofiles',
-        localField: 'author',
-        foreignField: 'author',
-        as: 'businessProfile',
-      },
-    },
-    { $unwind: '$businessProfile' },
-    {
-      $lookup: {
-        from: 'subcategories',
-        localField: 'subCategory',
-        foreignField: '_id',
-        as: 'subCategoryDetails',
-      },
-    },
-    { $unwind: '$subCategoryDetails' },
-    {
-      $project: {
-        name: 1,
-        description: 1,
-        image: 1,
-        date: 1,
-        startTime: 1,
-        endTime: 1,
-        status: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        profile: {
-          _id: '$businessProfile._id',
-          name: '$businessProfile.name',
-          phone: '$businessProfile.phone',
-          location: '$businessProfile.location',
-          image: '$businessProfile.image',
-        },
-        subCategory: {
-          _id: '$subCategoryDetails._id',
-          name: '$subCategoryDetails.name',
-          description: '$subCategoryDetails.description',
-          image: '$subCategoryDetails.image',
-        },
-      },
-    },
-  ];
-
-  const services = await ServiceQuery.aggregateWithPagination(pipeline, query);
-
-  return services;
-};
-
-// get single service by id
-const getSingleServiceApprovalRequested = async (
-  serviceId: string,
-  query?: { field?: string; categoryField?: string },
-): Promise<any> => {
-  const select =
-    !query?.field || query?.field !== undefined
-      ? 'author subCategory name description image startDate'
-      : query?.field + ' subCategory';
-
-  const service = await Service.findById(serviceId)
-    .select(select)
-    .populate([
-      {
-        path: 'subCategory',
-        select: query?.categoryField || 'name description image startDate',
-      },
-    ])
-    .lean();
-  return service;
 };
 
 // get all service requested by admin
@@ -280,7 +198,10 @@ const getAllServices = async (query?: any) => {
     { $sort: { rating: -1, ratingCount: -1 } },
   );
 
-  const services = await ServiceQuery.aggregateWithPagination(pipeline, query);
+  const services = await ProviderBaseService.aggregateWithPagination(
+    pipeline,
+    query,
+  );
   return services;
 };
 
@@ -376,7 +297,7 @@ const getProviderSelfServices = async (
 
   const populate = [{ path: 'subCategory', select: 'name' }];
 
-  return await ServiceQuery.findWithQueryParams({
+  return await ProviderBaseService.findWithPagination({
     filters,
     select,
     ...query,
@@ -391,56 +312,6 @@ const getProviderTotalServicesCount = async (authorId: string) => {
     isDeleted: false,
   });
   return res;
-};
-
-// Admin reviews the service (approve or decline)
-const actionServiceRequest = async (
-  serviceId: string,
-  status: 'approved' | 'declined',
-): Promise<IService> => {
-  const service = await Service.findById(serviceId);
-  if (!service) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
-  }
-
-  // Ensure the service is still pending before being reviewed
-  if (service.status !== 'pending') {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Service is already reviewed');
-  }
-
-  // Change the status of the service
-  service.status = status;
-
-  await service.save();
-  return service;
-};
-
-// Provider updates their service if it's declined
-const updateServiceById = async (
-  serviceId: string,
-  author: string,
-  updates: Partial<IService>,
-): Promise<IService> => {
-  const service = await Service.findOne({
-    _id: new ObjectId(serviceId),
-    author: new ObjectId(author),
-  });
-  if (!service || service.isDeleted) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
-  }
-
-  if (service.status !== 'declined') {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'Only declined services can be updated',
-    );
-  }
-
-  Object.assign(service, updates);
-  service.status = 'pending'; // Once updated, the status goes back to pending
-  await service.save();
-
-  return service;
 };
 
 // Provider deletes their service
@@ -544,21 +415,19 @@ const getProviderAllReviews = async (providerId: string, query: any) => {
       },
     },
   ];
-  const reviews = await ServiceQuery.aggregateWithPagination(pipeline, query);
+  const reviews = await ProviderBaseService.aggregateWithPagination(
+    pipeline,
+    query,
+  );
   return reviews;
 };
 
-getProviderAllReviews('68c662d39d2edb3f7181ea96', { page: 1, limit: 10 });
 const ProviderService = {
   createService,
-  getAllServicesApprovalRequestedB,
-  getSingleServiceApprovalRequested,
   getProviderTotalServicesCount,
   getAllServices,
   getSingleService,
   getProviderSelfServices,
-  actionServiceRequest,
-  updateServiceById,
   deleteService,
   getServiceById,
   serviceQuoteNotification,

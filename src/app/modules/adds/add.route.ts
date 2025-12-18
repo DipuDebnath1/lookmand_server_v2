@@ -1,10 +1,10 @@
 import express from 'express';
 import auth from '../../../middleware/auth';
-import Roles from '../../const/Roles';
 import validationRequest from '../../utils/validationRequest';
 import AddsController from './add.controller';
 import { createAddValidation } from './add.validation';
 import fileUploader from '../../../middleware/fileUpload/fileUploader';
+import { Roles } from '../user/const';
 
 const fileUploaderMiddleware = fileUploader('adds');
 

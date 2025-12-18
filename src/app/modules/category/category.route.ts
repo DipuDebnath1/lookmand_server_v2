@@ -9,8 +9,8 @@ import {
   subCategoryCreateValidation,
   subCategoryUpdateValidation,
 } from './category.validation';
-import Roles from '../../const/Roles';
 import fileUploader from '../../../middleware/fileUpload/fileUploader';
+import { Roles } from '../user/const';
 
 const router = express.Router();
 

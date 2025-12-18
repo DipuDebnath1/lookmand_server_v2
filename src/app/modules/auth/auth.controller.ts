@@ -14,7 +14,6 @@ import {
 } from '../tokens/token.service';
 import { TUser, UserServices } from '../user';
 import { AuthServices } from './auth.service';
-import { sendSocketNotification } from '../../../service/socketService';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
 import process from 'process';
 

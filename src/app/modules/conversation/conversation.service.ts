@@ -1,17 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import { Types } from 'mongoose';
-import QueryService from '../../../service/QueryService';
-import {
-  sendSocketConversation,
-  sendSocketMessage,
-} from '../../../service/socketService';
+
 import AppError from '../../ErrorHandler/AppError';
 import Conversation from './conversation.model';
 import Message from './message.model';
+import { ConversationBaseService, MessageBaseService } from '../../../service';
 const { ObjectId } = Types;
-const ConversationQuery = new QueryService(Conversation);
-const MessageQuery = new QueryService(Message);
 
 // create a new conversation
 const createConversation = async (userId: string, receiverId: string) => {
@@ -44,7 +39,6 @@ const createConversation = async (userId: string, receiverId: string) => {
   if (!conversation)
     throw new AppError(httpStatus.NOT_FOUND, 'Conversation not found');
   // emit socket event
-  sendSocketConversation(res._id as string);
   return conversation;
 };
 
@@ -68,7 +62,7 @@ const getAllConversations = async (userId: string, query: any) => {
 
   const select = '_id users lastMessage type updatedAt';
 
-  const res = await ConversationQuery.findWithQueryParams({
+  const res = await ConversationBaseService.findMany({
     filters,
     populate,
     sort: sort,
@@ -131,10 +125,6 @@ const sendMessageInConversation = async (
       select: 'name image',
     });
 
-  // send socket event
-  sendSocketMessage(conversationId, message);
-  sendSocketConversation(conversationId);
-
   return message;
 };
 
@@ -170,7 +160,7 @@ const getSingleConversation = async (
   const select = '_id author text image type createdAt';
 
   //  message query
-  const res = await MessageQuery.findWithQueryParams({
+  const res = await MessageBaseService.findWithPagination({
     filters,
     populate,
     select,

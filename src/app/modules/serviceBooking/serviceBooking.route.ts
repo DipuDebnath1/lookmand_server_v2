@@ -2,10 +2,10 @@ import express from 'express';
 const router = express.Router();
 
 import auth from '../../../middleware/auth';
-import Roles from '../../const/Roles';
 import ServiceBookingController from './serviceBooking.controller';
 import validationRequest from '../../utils/validationRequest';
 import { ServiceBookingValidation } from './serviceBooking.validation';
+import { Roles } from '../user/const';
 
 router.post(
   '/',

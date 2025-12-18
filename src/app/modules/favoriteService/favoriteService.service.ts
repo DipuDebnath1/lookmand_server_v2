@@ -3,9 +3,8 @@ import httpStatus from 'http-status';
 import AppError from '../../ErrorHandler/AppError';
 import FavoriteService from './favoriteService.model';
 import { Types } from 'mongoose';
-import QueryService from '../../../service/QueryService';
+import { FavoriteServiceBaseService } from '../../../service';
 const ObjectId = Types.ObjectId;
-const FavoriteServiceQuery = new QueryService(FavoriteService);
 
 // Create Favorite Service
 const createFavoriteService = async (
@@ -84,9 +83,12 @@ const getAllFavoriteService = async (author: string, query?: any) => {
     },
   ];
 
-  const res = await FavoriteServiceQuery.aggregateWithPagination(pipeline, {
-    ...query,
-  });
+  const res = await FavoriteServiceBaseService.aggregateWithPagination(
+    pipeline,
+    {
+      ...query,
+    },
+  );
 
   return res;
 };

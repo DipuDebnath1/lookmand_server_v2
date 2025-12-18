@@ -1,12 +1,13 @@
 import { Schema, model } from 'mongoose';
-import { IPolicySettings } from './policySetting.type';
+import { IPolicySettings } from './SettingsContent.type';
+import { SettingsContentTypes } from './const';
 
 const policySettingsSchema = new Schema<IPolicySettings>(
   {
     content: { type: String, required: true },
     type: {
       type: String,
-      enum: ['terms', 'privacy', 'host', 'contact'],
+      enum: Object.keys(SettingsContentTypes),
       required: true,
     },
     isDeleted: { type: Boolean, required: false, default: false },

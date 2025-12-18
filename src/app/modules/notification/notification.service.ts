@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import QueryService from '../../../service/QueryService';
+import { NotificationBaseService } from '../../../service';
 import sendPushNotification from '../../../service/sendPushNotification';
-import { sendSocketNotification } from '../../../service/socketService';
 import { logger } from '../../logger';
 import { SubCategoryService } from '../category/category.service';
 import { User } from '../user';
@@ -9,8 +8,6 @@ import { INotification } from './notification.interface';
 import Notification from './notification.model';
 import { Types } from 'mongoose';
 const { ObjectId } = Types;
-
-const NotificationQuery = new QueryService(Notification);
 
 class NotificationService {
   // Define your controller methods here
@@ -26,13 +23,6 @@ class NotificationService {
       const notificationData = await Notification.findById(res._id).populate(
         'sender',
         'name image',
-      );
-
-      //send notification
-      sendSocketNotification(
-        payload.user?.toString() || '',
-        payload.role,
-        notificationData,
       );
 
       // Send push notification
@@ -101,7 +91,7 @@ class NotificationService {
     }
 
     // { type: 'serviceQuote' }
-    const res = await NotificationQuery.findWithQueryParams({
+    const res = await NotificationBaseService.findWithPagination({
       filters: filters,
       ...query,
       select,
@@ -223,10 +213,6 @@ class NotificationService {
           `New Service Quote in ${category?.name}`,
           `A new service quote has been posted in ${category?.name}.`,
         );
-
-        sendSocketNotification(provider._id.toString(), 'provider', {
-          ...payload,
-        });
       }
     } catch (error: any) {
       logger.error(

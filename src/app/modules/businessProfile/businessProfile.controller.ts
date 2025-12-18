@@ -31,21 +31,6 @@ const BusinessProfileController = {
     });
   }),
 
-  // Set the availability status of the business profile
-  setAvailabilityStatus: catchAsync(async (req: Request, res: Response) => {
-    const { user }: any = req;
-    const { isAvailable } = req.body;
-
-    await BusinessProfileService.setAvailabilityStatus(user._id, isAvailable);
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      message: 'Availability status updated successfully',
-      success: true,
-      data: {},
-    });
-  }),
-
   // Find business profile by authorId
   findProfile: catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;

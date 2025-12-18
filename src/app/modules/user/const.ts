@@ -1,4 +1,11 @@
-export default {
+export const Region = {
+  north: 'north',
+  south: 'south',
+  east: 'east',
+  west: 'west',
+} as const;
+
+export const Roles = {
   ADMIN: 'admin',
   USER: 'user',
   PROVIDER: 'provider',
@@ -7,4 +14,4 @@ export default {
   SUPER_ADMIN: 'superAdmin',
   COMMON: 'common',
   COMMON_ADMIN: 'commonAdmin',
-};
+} as const;

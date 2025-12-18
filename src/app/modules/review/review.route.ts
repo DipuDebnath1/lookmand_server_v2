@@ -1,13 +1,13 @@
 import express from 'express';
 import reviewController from './review.controller';
 import auth from '../../../middleware/auth';
-import Roles from '../../const/Roles';
 import validationRequest from '../../utils/validationRequest';
 import {
   createReviewValidation,
   updateReviewValidation,
 } from './review.validation';
 import { UserController } from '../user/user.controller';
+import { Roles } from '../user/const';
 
 const router = express.Router();
 

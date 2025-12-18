@@ -1,9 +1,9 @@
 import express from 'express';
 import auth from '../../../middleware/auth';
-import Roles from '../../const/Roles';
 import settingController from './setting.controller';
 import validationRequest from '../../utils/validationRequest';
 import { documentUpdateValidation } from './setting.validation';
+import { Roles } from '../user/const';
 
 const router = express.Router();
 // About  Us

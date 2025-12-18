@@ -1,68 +1,110 @@
 /* eslint-disable no-undef */
+import { onlineUsers } from '../config/socketIO';
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Types } from 'mongoose';
 import { logger } from '../app/logger';
-import Conversation from '../app/modules/conversation/conversation.model';
-// send notification to specific user
-export const sendSocketNotification = (
-  userId: string,
-  role: string | undefined,
-  notification: any,
-) => {
+import Notification from '../app/modules/notification/notification.model';
+import { SocketRoomId } from './const';
+
+const { ObjectId } = Types;
+
+type TSendDataToUserWithSocketId = {
+  roomId: string;
+  userId: string;
+  data: any;
+};
+
+type TSendDataToUsersWithSocketId = {
+  roomId: string;
+  usersId: string[];
+  data: any;
+};
+
+// socket message to specific user by socket id
+const sendDataToUserWithSocketId = (payload: TSendDataToUserWithSocketId) => {
+  const onlineUsersSocketId = onlineUsers.get(payload.userId);
+  if (!onlineUsersSocketId) return; // user is
   try {
-    const roomId = `notification::${
-      role === 'superAdmin' ? 'superAdmin' : role === 'admin' ? 'admin' : userId
-    }`;
-    io.emit(roomId, notification);
+    io.to(onlineUsersSocketId).emit(payload.roomId, payload.data);
   } catch (error) {
     logger.error(
-      `socket notification Unexpected error: ${JSON.stringify(error)}`,
+      `socket message sending failed Unexpected error: ${JSON.stringify(error)}`,
     );
   }
 };
 
-// send conversation to specific users
-export const sendSocketConversation = async (conversationId: string) => {
+// send data to specific users by socket id
+const sendDataToUsersWithSocketId = (payload: TSendDataToUsersWithSocketId) => {
   try {
-    const populate = [
-      {
-        path: 'users',
-        select: '_id name image',
-      },
-      {
-        path: 'lastMessage',
-        select: '_id author text image type createdAt',
-        populate: { path: 'author', select: 'name image' },
-      },
-    ];
-    const conversation = await Conversation.findById(conversationId)
-      .select('_id users type createdAt lastMessage')
-      .populate(populate)
-      .lean();
-
-    if (!conversation)
-      return logger.warn(
-        `socket conversation: Conversation not found for ID ${conversationId}`,
-      );
-
-    for (const user of conversation.users || []) {
-      const otherUsers = conversation.users?.filter((u) => u._id !== user._id);
-
-      const roomId = `conversation::${user._id}`;
-      io.emit(roomId, { ...conversation, users: otherUsers || [] });
-    }
+    payload.usersId.forEach((userId) => {
+      const socketId = onlineUsers.get(userId);
+      if (socketId) {
+        io.to(socketId).emit(payload.roomId, payload.data);
+      }
+    });
   } catch (error) {
     logger.error(
-      `socket conversation Unexpected error: ${JSON.stringify(error)}`,
+      `socket message sending to multiple users failed Unexpected error: ${JSON.stringify(error)}`,
     );
   }
 };
 
-// send conversation to specific users
-export const sendSocketMessage = (conversationId: string, message: any) => {
+// send message to specific room
+const sendDataToRoom = (roomId: string, data: any) => {
   try {
-    const roomId = `message::${conversationId}`;
-    io.emit(roomId, message);
+    io.emit(roomId, data);
   } catch (error) {
-    logger.error(`socket message Unexpected error: ${JSON.stringify(error)}`);
+    logger.error(
+      `socket message to room failed Unexpected error: ${JSON.stringify(error)}`,
+    );
   }
 };
+
+// send all online users
+const sendOnlineUsers = () => {
+  try {
+    setTimeout(() => {
+      io.emit(SocketRoomId.OnlineUsers, {
+        onlineUsers: Array.from(onlineUsers.keys()),
+      });
+    }, 10);
+  } catch (error) {
+    logger.error(
+      `socket onlineUsers Unexpected error: ${JSON.stringify(error)}`,
+    );
+  }
+};
+
+// unread notification count
+const sendUnreadNotificationCount = async (userId: string) => {
+  try {
+    const onlineUsersSocketId = onlineUsers.get(userId);
+
+    if (!userId) return;
+    const unreadNotificationCount = await Notification.countDocuments({
+      author: new ObjectId(userId),
+      isViewed: false,
+    });
+
+    if (!onlineUsersSocketId) return; // user is offline
+    io.to(onlineUsersSocketId).emit(SocketRoomId.UnreadNotificationCount, {
+      unreadNotificationCount,
+    });
+  } catch (error) {
+    logger.error(
+      `socket unreadNotificationCount Unexpected error: ${JSON.stringify(
+        error,
+      )}`,
+    );
+  }
+};
+
+const SocketService = {
+  sendDataToUserWithSocketId,
+  sendDataToUsersWithSocketId,
+  sendDataToRoom,
+  sendOnlineUsers,
+  sendUnreadNotificationCount,
+};
+
+export default SocketService;

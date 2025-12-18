@@ -1,7 +1,7 @@
 import express from 'express';
 import auth from '../../../middleware/auth';
-import Roles from '../../const/Roles';
 import favoriteServiceController from './favoriteService.controller';
+import { Roles } from '../user/const';
 const router = express.Router();
 
 router.post(

@@ -6,8 +6,8 @@ import { Types } from 'mongoose';
 import catchAsync from '../../utils/catchAsync';
 import httpStatus from 'http-status';
 import serviceBookingService from './serviceBooking.service';
-import ProviderService from '../providerService/providerService.service';
 import notificationService from '../notification/notification.service';
+import ProviderService from '../service/service.service';
 const ObjectId = Types.ObjectId;
 
 // Book a service
@@ -29,7 +29,7 @@ const BookService = catchAsync(async (req: Request, res: Response) => {
   // check if service exists and is approved
   const service = await ProviderService.getServiceById(serviceId);
   // check if service exists and is approved
-  if (!service || service.isDeleted || service.status !== 'approved')
+  if (!service || service.isDeleted)
     throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
 
   // create booking

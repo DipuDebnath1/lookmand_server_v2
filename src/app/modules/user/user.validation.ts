@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Region } from './const';
 
 // Update Profile Validation
 const updateProfileValidation = z.object({
@@ -6,8 +7,8 @@ const updateProfileValidation = z.object({
     .object({
       name: z.string().min(2, 'Name must be at least 2 characters').optional(),
       phone: z.string().optional(),
-      location: z.enum(['north', 'south', 'east', 'west']).optional(),
-      image: z.string().optional(),
+      region: z.enum(Object.keys(Region) as [string, ...string[]]).optional(),
+      location: z.string().optional(),
       password: z
         .string()
         .min(6, 'Password must be at least 6 characters')

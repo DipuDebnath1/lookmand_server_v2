@@ -3,13 +3,10 @@ import AppError from '../../ErrorHandler/AppError';
 import httpStatus from 'http-status';
 import { ICategory, ISubCategory } from './category.type';
 import categoryModel from './category.model';
-import QueryService from '../../../service/QueryService';
 import { Types } from 'mongoose';
+import { CategoryBaseService, SubCategoryBaseService } from '../../../service';
 const ObjectId = Types.ObjectId;
 const { Category, SubCategory } = categoryModel;
-const CategoryQuery = new QueryService(Category);
-const SubCategoryQuery = new QueryService(SubCategory);
-
 class CategoryServices {
   // Create a new category
   async createCategory(data: ICategory): Promise<ICategory> {
@@ -70,7 +67,7 @@ class CategoryServices {
       ];
     }
 
-    const categories = await CategoryQuery.findWithQueryParams({
+    const categories = await CategoryBaseService.findMany({
       //   select: 'name description image',
       select: query.select || 'name description image',
       filters: filter,
@@ -146,7 +143,7 @@ class SubCategoryServices {
       ];
     }
 
-    const subCategories = await SubCategoryQuery.findWithQueryParams({
+    const subCategories = await SubCategoryBaseService.findMany({
       filters: { category: new ObjectId(categoryId), ...filter },
       select,
       ...query,

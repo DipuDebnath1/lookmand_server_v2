@@ -5,10 +5,8 @@ import ServiceBooking from '../serviceBooking/serviceBooking.model';
 import Review from './review.model';
 import { IReview } from './review.type';
 import { Types } from 'mongoose';
-import QueryService from '../../../service/QueryService';
+import { ReviewBaseService } from '../../../service';
 const { ObjectId } = Types;
-
-const ReviewServiceQuery = new QueryService(Review);
 
 // create review
 const createReview = async (payload: IReview, bookingId: string) => {
@@ -70,7 +68,7 @@ const deleteReview = async (id: string, author: string) => {
 // get all reviews by service id
 const getAllReviewsByServiceId = async (serviceId: string, query: any) => {
   const filter = { providerService: new ObjectId(serviceId), isDeleted: false };
-  return await ReviewServiceQuery.findWithQueryParams({
+  return await ReviewBaseService.findWithPagination({
     filters: filter,
     ...query,
   });

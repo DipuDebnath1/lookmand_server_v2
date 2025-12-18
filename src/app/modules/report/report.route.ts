@@ -1,9 +1,9 @@
 import express from 'express';
 import ReportController from './report.controller';
 import auth from '../../../middleware/auth';
-import Roles from '../../const/Roles';
 import validationRequest from '../../utils/validationRequest';
 import ReportValidation from './report.validation';
+import { Roles } from '../user/const';
 const router = express.Router();
 
 router.post(

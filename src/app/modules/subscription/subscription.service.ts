@@ -3,9 +3,7 @@ import httpStatus from 'http-status';
 import AppError from '../../ErrorHandler/AppError';
 import Subscription from './subscription.model';
 import { ISubscription } from './subscription.type';
-
-import QueryService from '../../../service/QueryService';
-const SubscriptionQuery = new QueryService<ISubscription>(Subscription);
+import { SubscriptionBaseService } from '../../../service';
 
 // create subscription
 const createSubscription = async (subscription: ISubscription) => {
@@ -19,7 +17,7 @@ const createSubscription = async (subscription: ISubscription) => {
 const getAllSubscriptions = async (query: any) => {
   const select = 'title price duration description durationType';
   const filter = { isDeleted: false };
-  const res = await SubscriptionQuery.findWithQueryParams({
+  const res = await SubscriptionBaseService.findWithPagination({
     ...query,
     filters: filter,
     select,

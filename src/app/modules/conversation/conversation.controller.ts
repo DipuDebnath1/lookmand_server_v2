@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
-import Roles from '../../const/Roles';
 import AppError from '../../ErrorHandler/AppError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
@@ -9,6 +8,7 @@ import { Types } from 'mongoose';
 import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
 import BusinessProfile from '../businessProfile/businessProfile.model';
+import { Roles } from '../user/const';
 const { ObjectId } = Types;
 
 // create a new conversation

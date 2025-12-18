@@ -1,4 +1,5 @@
 import { Document, Types } from 'mongoose';
+import { bookingStatuses } from './const';
 
 export interface IServiceBooking extends Document {
   author: Types.ObjectId;
@@ -7,6 +8,6 @@ export interface IServiceBooking extends Document {
   image: string;
   bookingDate: Date;
   location: string;
-  status: 'pending' | 'accepted' | 'completed' | 'declined' | 'cancelled';
+  status: keyof typeof bookingStatuses;
   isDeleted: boolean;
 }

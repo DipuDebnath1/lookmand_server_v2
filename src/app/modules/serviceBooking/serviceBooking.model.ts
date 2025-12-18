@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose';
 import { IServiceBooking } from './serviceBooking.type';
+import { bookingStatuses } from './const';
 
 const serviceBookingSchema = new Schema<IServiceBooking>(
   {
@@ -17,8 +18,8 @@ const serviceBookingSchema = new Schema<IServiceBooking>(
     },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'completed', 'declined', 'cancelled'],
-      default: 'pending',
+      enum: Object.keys(bookingStatuses),
+      default: bookingStatuses.pending,
     },
     isDeleted: { type: Boolean, default: false },
   },

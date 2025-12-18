@@ -3,8 +3,8 @@ import { UserController } from './user.controller';
 import validationRequest from '../../utils/validationRequest';
 import userValidation from './user.validation';
 import auth from '../../../middleware/auth';
-import Roles from '../../const/Roles';
 import fileUploader from '../../../middleware/fileUpload/fileUploader';
+import { Roles } from './const';
 
 const router = express.Router();
 

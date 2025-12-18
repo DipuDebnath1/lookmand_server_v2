@@ -1,12 +1,14 @@
+import { Region } from './../user/const';
 import { Document, Types } from 'mongoose';
+import { ServiceInquiryStatuses } from './const';
 
 export interface IServiceInquiry extends Document {
   author: Types.ObjectId;
   subCategory: Types.ObjectId;
   date: Date;
-  region: 'east' | 'west' | 'north' | 'south';
+  region: keyof typeof Region;
   isDeleted: boolean;
-  status: 'respond' | 'active' | 'closed';
+  status: keyof typeof ServiceInquiryStatuses;
   additionalInfo?: string;
   createdAt: Date;
   updatedAt: Date;

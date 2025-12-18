@@ -2,8 +2,7 @@ import httpStatus from 'http-status';
 import AppError from '../../ErrorHandler/AppError';
 import Report from './report.model';
 import { IReport } from './report.type';
-import QueryService from '../../../service/QueryService';
-const ReportQuery = new QueryService(Report);
+import { ReportBaseService } from '../../../service';
 
 // Create a new report
 const createReport = async (payload: IReport) => {
@@ -30,7 +29,7 @@ const getAllReports = async () => {
     { path: 'reportBy', select: 'name email image phone' },
   ];
 
-  const res = await ReportQuery.findWithQueryParams({
+  const res = await ReportBaseService.findWithPagination({
     select,
     populate,
     sort: { createdAt: -1, status: 1 },

@@ -4,8 +4,8 @@ import { UserRoute } from '../user/user.route';
 import { AuthRoute } from '../auth/auth.route';
 import BusinessProfileRoute from '../businessProfile/businessProfile.route';
 import CategoryRoute from '../category/category.route';
-import ProviderServiceRoute from '../providerService/providerService.route';
 import NotificationRoute from '../notification/notification.route';
+import ServiceRoute from '../service/service.route';
 import ServiceBookingRoute from '../serviceBooking/serviceBooking.route';
 import ReviewRoute from '../review/review.route';
 import FavoriteRoute from '../favoriteService/favoriteService.route';
@@ -36,7 +36,7 @@ const moduleRoute = [
   },
   {
     path: '/service',
-    route: ProviderServiceRoute,
+    route: ServiceRoute,
   },
   {
     path: '/booking',

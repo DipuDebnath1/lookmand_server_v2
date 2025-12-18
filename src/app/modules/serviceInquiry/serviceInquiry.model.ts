@@ -1,5 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { IServiceInquiry } from './serviceInquiry.interface';
+import { Region } from '../user/const';
+import { ServiceInquiryStatuses } from './const';
 
 const serviceInquirySchema = new Schema<IServiceInquiry>(
   {
@@ -8,13 +10,13 @@ const serviceInquirySchema = new Schema<IServiceInquiry>(
     date: { type: Date, required: true },
     region: {
       type: String,
-      enum: ['east', 'west', 'north', 'south'],
+      enum: Object.keys(Region),
       required: true,
     },
     status: {
       type: String,
-      enum: ['respond', 'active', 'closed'],
-      default: 'active',
+      enum: Object.keys(ServiceInquiryStatuses),
+      default: ServiceInquiryStatuses.active,
       required: false,
     },
     additionalInfo: { type: String, required: false },

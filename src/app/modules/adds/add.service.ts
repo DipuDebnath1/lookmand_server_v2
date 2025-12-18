@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import { PipelineStage, Types } from 'mongoose';
-import QueryService from '../../../service/QueryService';
 import AppError from '../../ErrorHandler/AppError';
 import Adds from './add.model';
 import { IAdds } from './add.type';
 import SubscriptionPurchase from '../subscriptionPurchases/SubscriptionPurchases.model';
 import config from '../../../config';
-
-const AddsServiceQuery = new QueryService(Adds);
+import { AddsBaseService } from '../../../service';
 
 // create add
 const createAdd = async (payload: IAdds) => {
@@ -71,7 +69,7 @@ const createAdd = async (payload: IAdds) => {
 // self Adds
 const getSelfAdds = async (authorId: Types.ObjectId, query?: any) => {
   const filter = { author: authorId, isDeleted: false };
-  const adds = await AddsServiceQuery.findWithQueryParams({
+  const adds = await AddsBaseService.findWithPagination({
     filters: filter,
     ...query,
     select: 'title image description createdAt',
@@ -138,7 +136,7 @@ const getAllAdds = async (location: string, query: any) => {
     },
   ];
 
-  const adds = await AddsServiceQuery.aggregateWithPagination(
+  const adds = await AddsBaseService.aggregateWithPagination(
     [...pipeLine, ...moreStage],
     query,
   );

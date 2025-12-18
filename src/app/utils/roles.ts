@@ -1,6 +1,6 @@
 // An application depends on what roles it will have.
 
-const allRoles = {
+export const allRoles = {
   user: ['common', 'user', 'userProviderCommon'],
   provider: ['common', 'provider', 'commonAdminProvider', 'userProviderCommon'],
   admin: ['common', 'commonAdmin', 'admin', 'commonAdminProvider'],

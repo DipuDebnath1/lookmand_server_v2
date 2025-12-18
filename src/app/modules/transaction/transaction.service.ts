@@ -3,10 +3,8 @@ import httpStatus from 'http-status';
 import Transaction from './transaction.model';
 import { ITransaction } from './transaction.type';
 import AppError from '../../ErrorHandler/AppError';
-import QueryService from '../../../service/QueryService';
 import { PipelineStage } from 'mongoose';
-
-const TransactionQuery = new QueryService(Transaction);
+import { TransactionBaseService } from '../../../service';
 
 const paymentResult = {
   amount: 100,
@@ -101,7 +99,7 @@ const getTransactions = async (query: any) => {
     { $sort: { createdAt: -1 } },
   ];
 
-  const transactions = await TransactionQuery.aggregateWithPagination(
+  const transactions = await TransactionBaseService.aggregateWithPagination(
     pipeline,
     query,
   );

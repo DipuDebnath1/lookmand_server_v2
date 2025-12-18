@@ -1,8 +1,6 @@
 import { PipelineStage } from 'mongoose';
-import AppError from '../../ErrorHandler/AppError';
 import BusinessProfile from './businessProfile.model';
 import { IBusinessProfile } from './businessProfile.type';
-import httpStatus from 'http-status';
 import { Types } from 'mongoose';
 const { ObjectId } = Types;
 
@@ -40,33 +38,6 @@ class BusinessProfileService {
     profile.isProfileComplete = !!isProfileComplete;
 
     Object.assign(profile, updates);
-    await profile.save();
-    return profile;
-  }
-
-  // Set availability status of the business profile
-  async setAvailabilityStatus(
-    authorId: string,
-    isAvailable: boolean,
-  ): Promise<IBusinessProfile> {
-    const profile = await BusinessProfile.findOne({ author: authorId }).select(
-      'isProfileComplete isAvailable',
-    );
-
-    if (!profile)
-      throw new AppError(
-        httpStatus.NOT_FOUND,
-        'Business profile not found please create profile first',
-      );
-    // Check if profile is complete
-    if (!profile.isProfileComplete)
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        'Complete the profile before setting availability status',
-      );
-
-    profile.isAvailable = isAvailable;
-
     await profile.save();
     return profile;
   }

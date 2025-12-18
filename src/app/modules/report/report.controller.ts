@@ -17,13 +17,13 @@ const CreateReport = catchAsync(async (req: Request, res: Response) => {
 
   payload.author = userId;
 
-  if (!ObjectId.isValid(payload.reportBy))
-    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid reportBy ID');
+  if (!ObjectId.isValid(payload.reportTo))
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid reportTo ID');
 
-  if (payload.author.toString() === payload.reportBy.toString())
+  if (payload.author.toString() === payload.reportTo.toString())
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'provide valid reportBy id different than author id',
+      'provide valid reportTo id different than author id',
     );
 
   const report = await ReportService.createReport(payload);

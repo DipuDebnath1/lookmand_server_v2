@@ -1,7 +1,7 @@
-import Roles from '../../const/Roles';
 import ServiceBooking from '../serviceBooking/serviceBooking.model';
 import Transaction from '../transaction/transaction.model';
 import { User } from '../user';
+import { Roles } from '../user/const';
 
 // Get dashboard statistics
 const dashboardServiceStatistics = async () => {

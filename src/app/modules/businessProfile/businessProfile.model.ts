@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { IBusinessProfile } from './businessProfile.type';
+import { Region } from '../user/const';
 
 const businessProfileSchema = new Schema<IBusinessProfile>(
   {
@@ -13,11 +14,16 @@ const businessProfileSchema = new Schema<IBusinessProfile>(
     description: { type: String, required: false, default: '' },
     region: {
       type: String,
-      enum: ['north', 'south', 'east', 'west'],
+      enum: Object.keys(Region),
       required: false,
     },
     location: { type: String, required: false },
     image: { type: String, required: false },
+    serviceCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ServiceCategory',
+      required: false,
+    },
     isProfileComplete: { type: Boolean, required: false, default: false },
   },
   { timestamps: true },

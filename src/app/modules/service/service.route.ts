@@ -3,14 +3,13 @@ const router = express.Router();
 
 import validationRequest from '../../utils/validationRequest';
 import auth from '../../../middleware/auth';
-import Roles from '../../const/Roles';
 import {
   serviceCreateValidation,
   serviceQuoteSearchValidation,
-  serviceUpdateValidation,
 } from './service.validation';
 import ProviderServiceController from './service.controller';
 import fileUploader from '../../../middleware/fileUpload/fileUploader';
+import { Roles } from '../user/const';
 // File upload configuration
 const UPLOADS_FOLDER = 'services';
 const fileUpload = fileUploader(UPLOADS_FOLDER);
@@ -31,18 +30,6 @@ router.post(
 );
 
 router.get(
-  '/admin/approval_requested',
-  auth(Roles.COMMON_ADMIN),
-  ProviderServiceController.getAllServicesApprovalRequested,
-);
-
-router.get(
-  '/admin/approval_requested/:serviceId',
-  auth(Roles.COMMON_ADMIN),
-  ProviderServiceController.getSingleServiceApprovalRequested,
-);
-
-router.get(
   '/all',
   // auth(Roles.COMMON),
   ProviderServiceController.getAllServices,
@@ -57,20 +44,6 @@ router.get(
   '/provider/self',
   auth(Roles.PROVIDER),
   ProviderServiceController.getServicesByProvider,
-);
-
-router.post(
-  '/:serviceId/action',
-  auth(Roles.ADMIN),
-  ProviderServiceController.actionServiceById,
-);
-
-router.put(
-  '/:serviceId',
-  auth(Roles.PROVIDER),
-  fileUpload.single('image'),
-  validationRequest(serviceUpdateValidation),
-  ProviderServiceController.updateServiceById,
 );
 
 router.delete(
