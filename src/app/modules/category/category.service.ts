@@ -2,15 +2,13 @@
 import AppError from '../../ErrorHandler/AppError';
 import httpStatus from 'http-status';
 import { ICategory, ISubCategory } from './category.type';
-import categoryModel from './category.model';
 import { Types } from 'mongoose';
 import { CategoryBaseService, SubCategoryBaseService } from '../../../service';
 const ObjectId = Types.ObjectId;
-const { Category, SubCategory } = categoryModel;
 class CategoryServices {
   // Create a new category
   async createCategory(data: ICategory): Promise<ICategory> {
-    const category = await Category.create(data);
+    const category = await CategoryBaseService.create(data);
     return category;
   }
 
@@ -21,7 +19,7 @@ class CategoryServices {
   ): Promise<ICategory | null> {
     const select = query?.select || 'name description image isDeleted';
 
-    const category = await Category.findById(categoryId).select(select);
+    const category = await CategoryBaseService.findById(categoryId, { select });
     return category;
   }
 
@@ -88,7 +86,7 @@ class SubCategoryServices {
       throw new AppError(httpStatus.NOT_FOUND, 'Category not found');
     }
 
-    return await SubCategory.create(data);
+    return await SubCategoryBaseService.create(data);
   }
 
   // Get subcategory by ID
@@ -98,7 +96,7 @@ class SubCategoryServices {
   ): Promise<ISubCategory | null> {
     const select = query?.select || 'category name description image isDeleted';
 
-    return await SubCategory.findById(subCategoryId).select(select);
+    return await SubCategoryBaseService.findById(subCategoryId, { select });
   }
 
   // Update subcategory

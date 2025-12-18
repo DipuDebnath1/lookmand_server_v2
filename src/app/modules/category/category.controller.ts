@@ -1,18 +1,26 @@
+/* eslint-disable no-undef */
 import { Request, Response } from 'express';
 import httpStatus from 'http-status';
-import { CategoryService, SubCategoryService } from './category.service';
-import sendResponse from '../../utils/sendResponse';
-import catchAsync from '../../utils/catchAsync';
 import AppError from '../../ErrorHandler/AppError';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
+import { CategoryService, SubCategoryService } from './category.service';
 
 // Category Controller
 export const CategoryController = {
   // Create a new category
   createCategory: catchAsync(async (req: Request, res: Response) => {
-    if (!req.file)
-      throw new AppError(httpStatus.BAD_REQUEST, 'Image file is required');
-    req.body.image = ImageUrl(req.file);
+    // Validate required image files
+    const files = req?.files as { [fieldname: string]: Express.Multer.File[] };
+
+    if (!files || !files.image || files.image.length < 1)
+      throw new AppError(httpStatus.BAD_REQUEST, 'category image required');
+    req.body.image = ImageUrl(files.image[0]);
+
+    // Banner image is optional
+    if (files && 'bannerImage' in files && files.bannerImage.length > 0)
+      req.body.bannerImage = ImageUrl(files.bannerImage[0]);
 
     const newCategory = await CategoryService.createCategory(req.body);
 

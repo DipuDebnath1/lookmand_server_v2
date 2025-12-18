@@ -21,10 +21,9 @@ router.put(
   auth('provider'),
   fileUpload.single('image'), // Handle image upload
   validationRequest(businessProfileValidation), // Validate the request body
-  BusinessProfileController.createOrUpdateProfile,
+  BusinessProfileController.CreateOrUpdateProfile,
 );
 
 // Route to find business profile
-router.get('/:id', auth(Roles.COMMON), BusinessProfileController.findProfile);
-
+router.get('/:id', auth(Roles.COMMON), BusinessProfileController.FindProfile);
 export default router;

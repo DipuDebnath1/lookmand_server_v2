@@ -1,9 +1,9 @@
 import express from 'express';
-import validationRequest from '../../utils/validationRequest';
 import auth from '../../../middleware/auth';
+import fileUploader from '../../../middleware/fileUpload/fileUploader';
+import validationRequest from '../../utils/validationRequest';
 import { AuthController } from './auth.controller';
 import AuthValidation from './auth.validation';
-import fileUploader from '../../../middleware/fileUpload/fileUploader';
 
 const router = express.Router();
 

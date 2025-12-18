@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Region } from '../user/const';
 
 // User Registration Validation
 const userSignUpValidation = z.object({
@@ -23,7 +24,7 @@ const userSignUpValidation = z.object({
         .min(6, 'Password must be at least 6 characters'),
 
       phone: z.string().optional(),
-      location: z.enum(['north', 'south', 'east', 'west']).optional(),
+      region: z.enum(Object.values(Region) as [string, ...string[]]).optional(),
       role: z.enum(['user', 'provider']),
     })
     .strict(), // .strict() will disallow unknown keys

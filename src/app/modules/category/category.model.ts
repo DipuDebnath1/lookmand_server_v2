@@ -4,9 +4,9 @@ import { ICategory, ISubCategory } from './category.type';
 // category schema
 const categorySchema = new Schema<ICategory>(
   {
-    name: { type: String, required: true },
-    description: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     image: { type: String, required: true },
+    bannerImage: { type: String, required: false },
     isDeleted: { type: Boolean, required: false, default: false },
   },
   { timestamps: true },
@@ -16,7 +16,7 @@ const categorySchema = new Schema<ICategory>(
 const subCategorySchema = new Schema<ISubCategory>(
   {
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     description: { type: String, required: true },
     image: { type: String, required: false },
     isDeleted: { type: Boolean, required: false, default: false },

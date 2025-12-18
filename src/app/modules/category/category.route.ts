@@ -24,7 +24,10 @@ const fileUpload = fileUploader(UPLOADS_FOLDER);
 router.post(
   '/',
   auth(Roles.ADMIN), // Assuming 'admin' has permission to create categories
-  fileUpload.single('image'), // Handle image upload
+  fileUpload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'bannerImage', maxCount: 1 },
+  ]), // Handle image upload
   validationRequest(categoryCreateValidation),
   CategoryController.createCategory,
 );
@@ -39,7 +42,10 @@ router.get('/:categoryId', CategoryController.getCategoryById);
 router.put(
   '/:categoryId',
   auth(Roles.ADMIN),
-  fileUpload.single('image'), // Handle image upload
+  fileUpload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'bannerImage', maxCount: 1 },
+  ]), // Handle image upload
   validationRequest(categoryUpdateValidation),
   CategoryController.updateCategory,
 );

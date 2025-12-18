@@ -2,6 +2,8 @@ import { PipelineStage } from 'mongoose';
 import BusinessProfile from './businessProfile.model';
 import { IBusinessProfile } from './businessProfile.type';
 import { Types } from 'mongoose';
+import AppError from '../../ErrorHandler/AppError';
+import httpStatus from 'http-status';
 const { ObjectId } = Types;
 
 class BusinessProfileService {
@@ -12,7 +14,6 @@ class BusinessProfileService {
       // Create a new profile with the default author ID
       profile = await BusinessProfile.create({
         author: authorId,
-        isAvailable: false,
       });
     }
 
@@ -26,15 +27,22 @@ class BusinessProfileService {
   ): Promise<IBusinessProfile> {
     const profile = await this.findOrCreateProfile(authorId);
 
-    // Update profile fields
+    // Prevent changing serviceCategory if already set
+    if (profile.serviceCategory && updates.serviceCategory)
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "sorry you can't change service category once set",
+      );
 
     // Check if the profile is complete
     const isProfileComplete =
       profile.name &&
       profile.phone &&
+      profile.region &&
       profile.location &&
       profile.image &&
       profile.description;
+    profile.serviceCategory;
     profile.isProfileComplete = !!isProfileComplete;
 
     Object.assign(profile, updates);

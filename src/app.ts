@@ -16,6 +16,7 @@ import { logger } from './app/logger';
 import notFoundRoute from './middleware/notFoundRoute';
 import globalErrorHandler from './middleware/globalErrorHandler';
 import { serverCorsOptions } from './config/corsOptions';
+import config from './config';
 
 const app: Application = express();
 
@@ -46,7 +47,7 @@ app.use('/api/v1', router);
 
 // Default Route
 app.get('/test', (req: Request, res: Response) => {
-  res.json({ data: req.ip, message: 'Server is running' });
+  res.send(`${config.appName} Server is running 🚀`);
 });
 
 // 🔹 Error Handling
