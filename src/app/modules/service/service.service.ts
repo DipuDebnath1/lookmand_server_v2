@@ -2,97 +2,78 @@
 
 import httpStatus from 'http-status';
 import { PipelineStage, Types } from 'mongoose';
-import config from '../../../config';
 import AppError from '../../ErrorHandler/AppError';
-import businessProfileService from '../businessProfile/businessProfile.service';
 import Notification from '../notification/notification.model';
-import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
 import { TRoles } from '../user';
 import Service from './service.model';
 import { IService } from './service.type';
 import { Roles } from '../user/const';
-import { ProviderBaseService } from '../../../service';
-const { providerServiceCreateLimit } = config;
+import {
+  ProfileBaseService,
+  ProviderBaseService,
+  SubCategoryBaseService,
+} from '../../../service';
 
 const ObjectId = Types.ObjectId;
 
 // Create a new service by provider
-const createService = async (
-  authorId: string,
-  serviceData: IService,
-): Promise<IService> => {
-  const getAuthorBusinessProfile =
-    await businessProfileService.getBusinessProfileByAuthorId(authorId);
+const createService = async (payload: IService) => {
+  //  business profile completed check
+  const provider = await ProfileBaseService.findOne({
+    filters: { author: new ObjectId(payload.author) },
+    select: '_id isProfileComplete serviceCategory',
+  });
 
-  // check if business profile is complete
-  if (!getAuthorBusinessProfile || !getAuthorBusinessProfile.isProfileComplete)
+  // check business profile exists
+  if (!provider)
+    throw new AppError(httpStatus.BAD_REQUEST, 'Business profile not found');
+
+  // check business profile completed
+  if (!provider.isProfileComplete)
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'Complete your business profile before adding a service',
+      'complete your business profile before',
     );
 
-  // check valid service category
-  if (!ObjectId.isValid(serviceData.subCategory))
-    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid sub-category ID');
+  // check valid subcategory
+  const subCategory = await SubCategoryBaseService.findOne({
+    filters: {
+      _id: payload.subCategory,
+      isDeleted: false,
+    },
+    select: 'category',
+  });
 
-  // check provider subscription plan current plan
-  const providerPlan =
-    await SubscriptionPurchasesService.getProviderSubscriptionCurrentPlan(
-      authorId,
-    );
-  // if no plan found
-  if (!providerPlan)
+  // check subcategory exists
+
+  if (!subCategory)
+    throw new AppError(httpStatus.BAD_REQUEST, 'sub-category not found');
+
+  // check service category match
+  if (provider.serviceCategory.toString() !== subCategory.category.toString())
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'Provider subscription plan not found! Please subscribe to a plan.',
+      'service mismatch with your profile category',
     );
 
-  // check valid subscription
-  if (!SubscriptionPurchasesService.isValidSubscription(authorId))
+  // isExist check
+  const isExist = await ProviderBaseService.findOne({
+    filters: {
+      author: new ObjectId(payload.author),
+      subCategory: new ObjectId(payload.subCategory),
+      isDeleted: false,
+    },
+  });
+
+  // check already exists
+  if (isExist)
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'You need an active subscription plan to create a service',
+      'You have already added this service',
     );
-
-  // check if subcategory exists
-  const totalExistingServicesCount =
-    await getProviderTotalServicesCount(authorId);
-
-  // check service create limit by subscription plan
-  switch (providerPlan.subscription.title) {
-    // Basic plan allows services
-    case 'Basic':
-      if (totalExistingServicesCount >= providerServiceCreateLimit.basic)
-        throw new AppError(
-          httpStatus.BAD_REQUEST,
-          `You can only have ${providerServiceCreateLimit.basic} active services on the Basic plan`,
-        );
-      break;
-
-    // Standard plan allows services
-    case 'Standard':
-      if (totalExistingServicesCount >= providerServiceCreateLimit.standard)
-        throw new AppError(
-          httpStatus.BAD_REQUEST,
-          `You can only have ${providerServiceCreateLimit.standard} active services on the Standard plan`,
-        );
-      break;
-
-    // Premium plan allows services
-    case 'Premium':
-      if (totalExistingServicesCount >= providerServiceCreateLimit.premium)
-        throw new AppError(
-          httpStatus.BAD_REQUEST,
-          `You can only have ${providerServiceCreateLimit.premium} active services on the Premium plan`,
-        );
-      break;
-  }
 
   // create service
-  const newService = await Service.create({
-    ...serviceData,
-    author: authorId,
-  });
+  const newService = await Service.create(payload);
 
   return newService;
 };

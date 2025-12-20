@@ -8,6 +8,8 @@ import { User } from './user.model';
 import { sendOtpVerificationMail } from '../../../config/mailService/sendOtp';
 import generateOtp from '../../utils/genarateOtp';
 import { UserBaseService } from '../../../service';
+import { Types } from 'mongoose';
+const { ObjectId } = Types;
 
 // **********USER SERVICES**********
 

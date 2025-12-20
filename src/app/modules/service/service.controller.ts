@@ -8,36 +8,22 @@ import sendResponse from '../../utils/sendResponse';
 import { Types } from 'mongoose';
 import notificationService from '../notification/notification.service';
 import ProviderService from './service.service';
-import { ImageUrl } from '../../utils/urlAddInUploadedImage';
 const ObjectId = Types.ObjectId;
 
 // Create a new service by provider
 const createService = catchAsync(async (req: Request, res: Response) => {
   const { user }: any = req;
+  const { subCategoryId } = req.params;
+  if (!ObjectId.isValid(subCategoryId))
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid sub-category ID');
 
-  // handle file upload
-  if (!req.file)
-    throw new AppError(httpStatus.BAD_REQUEST, 'Service image is required');
-  // time validation
-  if (new Date(req.body.startDate) < new Date())
-    throw new AppError(httpStatus.BAD_REQUEST, 'start time Invalid time range');
+  const payload = {
+    author: user._id,
+    subCategory: subCategoryId,
+  };
 
-  req.body.image = ImageUrl(req.file);
-  const newService = await providerServiceService.createService(
-    user._id,
-    req.body,
-  );
+  const newService = await providerServiceService.createService(payload as any);
   // const newService = await createService(user._id, req.body);
-
-  //  send notification to admin about new service request
-  notificationService.sendNotification({
-    sender: user._id.toString(),
-    title: 'New Service Request',
-    description: `${user.name} has requested a new service.`,
-    service: newService?._id as any,
-    type: 'serviceApproval',
-    role: 'admin',
-  });
 
   // send response
   sendResponse(res, {

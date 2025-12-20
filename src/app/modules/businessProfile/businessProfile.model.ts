@@ -22,6 +22,7 @@ const businessProfileSchema = new Schema<IBusinessProfile>(
     serviceCategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ServiceCategory',
+      default: null,
       required: false,
     },
     isProfileComplete: { type: Boolean, required: false, default: false },

@@ -4,6 +4,7 @@ import { IBusinessProfile } from './businessProfile.type';
 import { Types } from 'mongoose';
 import AppError from '../../ErrorHandler/AppError';
 import httpStatus from 'http-status';
+import { UserBaseService } from '../../../service';
 const { ObjectId } = Types;
 
 class BusinessProfileService {
@@ -11,6 +12,13 @@ class BusinessProfileService {
   async findOrCreateProfile(authorId: string): Promise<IBusinessProfile> {
     let profile = await BusinessProfile.findOne({ author: authorId });
     if (!profile) {
+      const findUser = await UserBaseService.findById(authorId, {
+        select: 'role',
+      });
+      // Ensure the user is a provider
+      if (!findUser || findUser.role !== 'provider')
+        throw new AppError(httpStatus.BAD_REQUEST, 'profile not found !');
+
       // Create a new profile with the default author ID
       profile = await BusinessProfile.create({
         author: authorId,
@@ -36,13 +44,14 @@ class BusinessProfileService {
 
     // Check if the profile is complete
     const isProfileComplete =
-      profile.name &&
-      profile.phone &&
-      profile.region &&
-      profile.location &&
-      profile.image &&
-      profile.description;
-    profile.serviceCategory;
+      (profile.name.trim() || updates.name?.trim()) &&
+      (profile.phone.trim() || updates.phone?.trim()) &&
+      (profile.region.trim() || updates.region?.trim()) &&
+      (profile.location.trim() || updates.location?.trim()) &&
+      (profile.image.trim() || updates.image?.trim()) &&
+      (profile.description.trim() || updates.description?.trim()) &&
+      (profile.serviceCategory || updates.serviceCategory);
+
     profile.isProfileComplete = !!isProfileComplete;
 
     Object.assign(profile, updates);

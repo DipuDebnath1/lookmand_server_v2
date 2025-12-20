@@ -4,21 +4,15 @@ const router = express.Router();
 import validationRequest from '../../utils/validationRequest';
 import auth from '../../../middleware/auth';
 import {
-  serviceCreateValidation,
   serviceQuoteSearchValidation,
 } from './service.validation';
 import ProviderServiceController from './service.controller';
-import fileUploader from '../../../middleware/fileUpload/fileUploader';
 import { Roles } from '../user/const';
 // File upload configuration
-const UPLOADS_FOLDER = 'services';
-const fileUpload = fileUploader(UPLOADS_FOLDER);
 
 router.post(
-  '/',
+  '/:subCategoryId',
   auth(Roles.PROVIDER),
-  fileUpload.single('image'),
-  validationRequest(serviceCreateValidation),
   ProviderServiceController.createService,
 );
 
