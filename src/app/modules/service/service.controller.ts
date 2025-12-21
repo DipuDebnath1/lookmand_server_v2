@@ -23,7 +23,6 @@ const createService = catchAsync(async (req: Request, res: Response) => {
   };
 
   const newService = await providerServiceService.createService(payload as any);
-  // const newService = await createService(user._id, req.body);
 
   // send response
   sendResponse(res, {

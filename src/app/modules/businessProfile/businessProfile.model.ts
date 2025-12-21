@@ -1,7 +1,38 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Schema } from 'mongoose';
-import { IBusinessProfile } from './businessProfile.type';
+import {
+  IAvailability,
+  IBusinessProfile,
+  IDayAbility,
+} from './businessProfile.type';
 import { Region } from '../user/const';
+import { defaultAbilities } from './const';
 
+// Reusable day schema
+const dayAbilitySchema = new Schema<IDayAbility>(
+  {
+    isAvailable: { type: Boolean, required: true, default: false },
+    openingTime: { type: Number, required: false },
+    closingTime: { type: Number, required: false },
+  },
+  { _id: false },
+);
+
+// Weekly availability schema
+const availabilitySchema = new Schema<IAvailability>(
+  {
+    Saturday: { type: dayAbilitySchema, required: false },
+    Sunday: { type: dayAbilitySchema, required: false },
+    Monday: { type: dayAbilitySchema, required: false },
+    Tuesday: { type: dayAbilitySchema, required: false },
+    Wednesday: { type: dayAbilitySchema, required: false },
+    Thursday: { type: dayAbilitySchema, required: false },
+    Friday: { type: dayAbilitySchema, required: false },
+  },
+  { _id: false },
+);
+
+//  main business profile schema
 const businessProfileSchema = new Schema<IBusinessProfile>(
   {
     author: {
@@ -25,10 +56,29 @@ const businessProfileSchema = new Schema<IBusinessProfile>(
       default: null,
       required: false,
     },
+    availability: {
+      type: availabilitySchema,
+      required: false,
+      default: () => ({ ...defaultAbilities }),
+    },
     isProfileComplete: { type: Boolean, required: false, default: false },
   },
   { timestamps: true },
 );
+
+businessProfileSchema.set('toJSON', {
+  transform(_doc, ret) {
+    if (ret.availability && typeof ret.availability === 'object') {
+      Object.values(ret.availability).forEach((day: any) => {
+        if (day && day.isAvailable === false) {
+          delete day.openingTime;
+          delete day.closingTime;
+        }
+      });
+    }
+    return ret;
+  },
+});
 
 const BusinessProfile = mongoose.model<IBusinessProfile>(
   'BusinessProfile',

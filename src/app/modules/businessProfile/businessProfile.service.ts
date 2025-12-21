@@ -24,7 +24,6 @@ class BusinessProfileService {
         author: authorId,
       });
     }
-
     return profile;
   }
 

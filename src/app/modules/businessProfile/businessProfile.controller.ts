@@ -46,7 +46,24 @@ const FindProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// set ability
+const SetAbility = catchAsync(async (req: Request, res: Response) => {
+  const { user }: any = req; // Get authorId from user object
+
+  const updatedProfile = await BusinessProfileService.updateProfile(user._id, {
+    availability: req.body,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Business profile ability updated successfully',
+    success: true,
+    data: updatedProfile,
+  });
+});
+
 export default {
   CreateOrUpdateProfile,
   FindProfile,
+  SetAbility,
 };

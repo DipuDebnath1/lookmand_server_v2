@@ -80,33 +80,29 @@ const createService = async (payload: IService) => {
 
 // get all service requested by admin
 const getAllServices = async (query?: any) => {
-  // base match criteria
-  const ServiceInfoMatch: any = { isDeleted: false, status: 'approved' };
-  // filters by subcategory
-  if (query?.subcategory && ObjectId.isValid(query.subcategory))
-    ServiceInfoMatch.subCategory = new ObjectId(query.subcategory);
-  // filter by author
-  if (query?.author && ObjectId.isValid(query.author))
-    ServiceInfoMatch.author = new ObjectId(query.author);
-  // regex by name filter
-  if (query?.name) {
-    ServiceInfoMatch.name = { $regex: new RegExp(query.name, 'i') };
+  const { category, subCategory, region } = query;
+  if (category && ObjectId.isValid(category)) {
+    const subCategories = await SubCategoryBaseService.findMany({
+      filters: { category: new ObjectId(category), isDeleted: false },
+      select: '_id',
+    });
+    const subCategoryIds = subCategories.map((sc) => sc._id);
+    query.subCategoryIds = { $in: subCategoryIds };
   }
 
-  // aggregation pipeline
+  // match conditions
+  const matchSubCategory = {
+    isDeleted: false,
+    subCategory:
+      subCategory && ObjectId.isValid(subCategory)
+        ? new ObjectId(subCategory)
+        : query.subCategoryIds,
+  };
+
   const pipeline: PipelineStage[] = [
     {
-      $match: ServiceInfoMatch,
+      $match: matchSubCategory,
     },
-    {
-      $lookup: {
-        from: 'businessprofiles',
-        localField: 'author',
-        foreignField: 'author',
-        as: 'businessProfile',
-      },
-    },
-    { $unwind: '$businessProfile' },
     {
       $lookup: {
         from: 'subcategories',
@@ -115,148 +111,73 @@ const getAllServices = async (query?: any) => {
         as: 'subCategoryDetails',
       },
     },
-    { $unwind: '$subCategoryDetails' },
+    {
+      $unwind: '$subCategoryDetails',
+    },
     {
       $lookup: {
-        from: 'reviews',
-        localField: '_id',
-        foreignField: 'providerService',
-        as: 'reviews',
-        pipeline: [{ $match: { isDeleted: false } }],
+        from: 'businessprofiles',
+        localField: 'author',
+        foreignField: 'author',
+        as: 'authorDetails',
       },
     },
     {
-      $unwind: {
-        path: '$reviews',
-        preserveNullAndEmptyArrays: true,
-      },
+      $unwind: '$authorDetails',
     },
-  ];
 
-  // match available services Filter by location and author if query.location exists
-  const profileMatch: any = { 'businessProfile.isAvailable': true };
-  if (query?.location) {
-    profileMatch['businessProfile.location'] = {
-      $regex: new RegExp(query.location, 'i'),
-    };
-  }
-  // apply profile match if there are any conditions
-
-  pipeline.push({
-    $match: profileMatch,
-  });
-
-  // repositioning $project stage to the end of the pipeline
-  pipeline.push(
+    // filter by region and profile completion
     {
-      $group: {
-        _id: '$_id', // Group by the service's _id
-        name: { $first: '$name' },
-        description: { $first: '$description' },
-        image: { $first: '$image' },
-        subCategory: { $first: '$subCategoryDetails.name' },
-        location: { $first: '$businessProfile.location' },
-        reviews: { $push: '$reviews' },
-        author: { $first: '$author' },
-      },
+      $match: region
+        ? {
+            'authorDetails.region': region,
+            'authorDetails.isProfileComplete': true,
+          }
+        : { 'authorDetails.isProfileComplete': true },
     },
-    // Add the aggregation for rating and ratingCount
     {
       $project: {
         _id: 1,
-        name: 1,
-        description: 1,
-        image: 1,
-        subCategory: 1,
-        location: 1,
-        rating: { $avg: '$reviews.rating' },
-        ratingCount: { $size: '$reviews' },
-
         author: 1,
+        subCategory: {
+          name: '$subCategoryDetails.name',
+          _id: '$subCategoryDetails._id',
+          description: '$subCategoryDetails.description',
+        },
+        authorDetails: {
+          _id: '$authorDetails._id',
+          businessName: '$authorDetails.businessName',
+          region: '$authorDetails.region',
+          location: '$authorDetails.location',
+          image: '$authorDetails.image',
+          description: '$authorDetails.description',
+          phone: '$authorDetails.phone',
+        },
       },
     },
-    // sorting by average rating descending and rating count descending
-    { $sort: { rating: -1, ratingCount: -1 } },
-  );
+    //  send one service per provider
+    {
+      $group: {
+        _id: '$author',
+        service: { $first: '$$ROOT' },
+      },
+    },
+    // Reshape the output to match the original structure
+    {
+      $replaceRoot: { newRoot: '$service' },
+    },
+  ];
 
   const services = await ProviderBaseService.aggregateWithPagination(
     pipeline,
     query,
   );
+  // console.log(services.data);
   return services;
 };
 
 // get all service requested by admin
-const getSingleService = async (id: string) => {
-  const pipeline: PipelineStage[] = [
-    {
-      $match: { _id: new ObjectId(id) },
-    },
-    {
-      $lookup: {
-        from: 'businessprofiles',
-        localField: 'author',
-        foreignField: 'author',
-        as: 'businessProfile',
-      },
-    },
-    { $unwind: '$businessProfile' },
-    {
-      $lookup: {
-        from: 'subcategories',
-        localField: 'subCategory',
-        foreignField: '_id',
-        as: 'subCategoryDetails',
-      },
-    },
-    { $unwind: '$subCategoryDetails' },
-    {
-      $lookup: {
-        from: 'reviews',
-        localField: '_id',
-        foreignField: 'providerService',
-        as: 'reviews',
-        pipeline: [{ $match: { isDeleted: false } }],
-      },
-    },
-    {
-      $unwind: {
-        path: '$reviews',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-  ];
-
-  // repositioning $project stage to the end of the pipeline
-  pipeline.push(
-    {
-      $group: {
-        _id: '$_id', // Group by the service's _id
-        name: { $first: '$name' },
-        description: { $first: '$description' },
-        image: { $first: '$image' },
-        subCategory: { $first: '$subCategoryDetails.name' },
-        businessProfile: { $first: '$businessProfile' },
-        reviews: { $push: '$reviews' },
-        author: { $first: '$author' },
-      },
-    },
-    {
-      $project: {
-        name: 1,
-        description: 1,
-        image: 1,
-        subCategory: 1,
-        rating: { $avg: '$reviews.rating' }, // Placeholder for rating
-        ratingCount: { $size: '$reviews' }, // Placeholder for rating count
-        author: 1,
-      },
-    },
-  );
-
-  const services = await Service.aggregate(pipeline);
-  return services[0];
-};
+const getSingleService = async (id: string) => {};
 
 // get services by Id
 const getServiceById = async (id: string) => {
@@ -416,3 +337,31 @@ const ProviderService = {
 };
 
 export default ProviderService;
+
+//  add services in profile
+const temp = async () => {
+  const providers = await ProfileBaseService.findOne({
+    select: 'serviceCategory',
+    filters: { author: new ObjectId('6943c2cce4eb2f6f65e51e6b') },
+  });
+
+  const subCategories = await SubCategoryBaseService.findMany({
+    filters: {
+      category: providers?.serviceCategory,
+      isDeleted: false,
+    },
+    select: '_id',
+  });
+  console.log(subCategories);
+
+  for (const subCategory of subCategories) {
+    const res = await Service.create({
+      author: '6943c2cce4eb2f6f65e51e6b',
+      subCategory: subCategory._id,
+    } as any);
+    console.log(res);
+  }
+
+  console.log(providers);
+};
+// temp();

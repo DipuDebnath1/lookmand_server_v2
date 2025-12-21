@@ -2,7 +2,9 @@
 
 import express from 'express';
 import validationRequest from '../../utils/validationRequest';
-import businessProfileValidation from './businessProfile.validation';
+import businessProfileValidation, {
+  availabilitySchemaValidation,
+} from './businessProfile.validation';
 import BusinessProfileController from './businessProfile.controller';
 
 import auth from '../../../middleware/auth';
@@ -20,8 +22,15 @@ router.put(
   '/',
   auth('provider'),
   fileUpload.single('image'), // Handle image upload
-  validationRequest(businessProfileValidation), // Validate the request body
+  validationRequest(businessProfileValidation),
   BusinessProfileController.CreateOrUpdateProfile,
+);
+
+router.put(
+  '/ability',
+  auth('provider'),
+  validationRequest(availabilitySchemaValidation),
+  BusinessProfileController.SetAbility,
 );
 
 // Route to find business profile
