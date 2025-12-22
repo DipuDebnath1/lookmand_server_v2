@@ -91,13 +91,15 @@ const getAllServices = async (query?: any) => {
   }
 
   // match conditions
-  const matchSubCategory = {
+  const matchSubCategory: any = {
     isDeleted: false,
-    subCategory:
-      subCategory && ObjectId.isValid(subCategory)
-        ? new ObjectId(subCategory)
-        : query.subCategoryIds,
   };
+
+  const objSubCategory = new ObjectId(subCategory);
+
+  if ((subCategory && ObjectId.isValid(subCategory)) || query.subCategoryIds) {
+    matchSubCategory.subCategory = objSubCategory || query.subCategoryIds;
+  }
 
   const pipeline: PipelineStage[] = [
     {
@@ -119,21 +121,21 @@ const getAllServices = async (query?: any) => {
         from: 'businessprofiles',
         localField: 'author',
         foreignField: 'author',
-        as: 'authorDetails',
+        as: 'profileDetails',
       },
     },
     {
-      $unwind: '$authorDetails',
+      $unwind: '$profileDetails',
     },
 
     // filter by region and profile completion
     {
       $match: region
         ? {
-            'authorDetails.region': region,
-            'authorDetails.isProfileComplete': true,
+            'profileDetails.region': region,
+            'profileDetails.isProfileComplete': true,
           }
-        : { 'authorDetails.isProfileComplete': true },
+        : { 'profileDetails.isProfileComplete': true },
     },
     {
       $project: {
@@ -144,14 +146,14 @@ const getAllServices = async (query?: any) => {
           _id: '$subCategoryDetails._id',
           description: '$subCategoryDetails.description',
         },
-        authorDetails: {
-          _id: '$authorDetails._id',
-          businessName: '$authorDetails.businessName',
-          region: '$authorDetails.region',
-          location: '$authorDetails.location',
-          image: '$authorDetails.image',
-          description: '$authorDetails.description',
-          phone: '$authorDetails.phone',
+        profileDetails: {
+          _id: '$profileDetails._id',
+          businessName: '$profileDetails.businessName',
+          region: '$profileDetails.region',
+          location: '$profileDetails.location',
+          image: '$profileDetails.image',
+          description: '$profileDetails.description',
+          phone: '$profileDetails.phone',
         },
       },
     },
@@ -177,34 +179,141 @@ const getAllServices = async (query?: any) => {
 };
 
 // get all service requested by admin
-const getSingleService = async (id: string) => {};
+const getSingleService = async (serviceId: string) => {
+  if (!serviceId || !ObjectId.isValid(serviceId))
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid service ID');
+  // match conditions
+  const matchSubCategory = {
+    _id: new ObjectId(serviceId),
+    isDeleted: false,
+  };
 
-// get services by Id
-const getServiceById = async (id: string) => {
-  return await Service.findById(id);
+  const pipeline: PipelineStage[] = [
+    {
+      $match: matchSubCategory,
+    },
+    {
+      $lookup: {
+        from: 'subcategories',
+        localField: 'subCategory',
+        foreignField: '_id',
+        as: 'subCategoryDetails',
+      },
+    },
+    {
+      $unwind: '$subCategoryDetails',
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'author',
+        foreignField: '_id',
+        as: 'authorDetails',
+      },
+    },
+    {
+      $unwind: '$authorDetails',
+    },
+    {
+      $lookup: {
+        from: 'businessprofiles',
+        localField: 'author',
+        foreignField: 'author',
+        as: 'profileDetails',
+      },
+    },
+    {
+      $unwind: '$profileDetails',
+    },
+
+    // filter by region and profile completion
+    {
+      $match: { 'profileDetails.isProfileComplete': true },
+    },
+    {
+      $project: {
+        _id: 1,
+        author: {
+          _id: '$authorDetails._id',
+          name: '$authorDetails.name',
+        },
+        subCategory: {
+          name: '$subCategoryDetails.name',
+          _id: '$subCategoryDetails._id',
+          description: '$subCategoryDetails.description',
+          image: '$subCategoryDetails.image',
+        },
+        profileDetails: {
+          _id: '$profileDetails._id',
+          name: '$profileDetails.name',
+          region: '$profileDetails.region',
+          location: '$profileDetails.location',
+          image: '$profileDetails.image',
+          description: '$profileDetails.description',
+          phone: '$profileDetails.phone',
+          availability: '$profileDetails.availability',
+        },
+      },
+    },
+  ];
+  const result = await ProviderBaseService.aggregate(pipeline);
+  if (!result || result.length === 0)
+    throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
+  return result[0];
 };
 
 // get self service by provider
-const getProviderSelfServices = async (
+const providerServicesByAuthorId = async (
   authorId: string,
   query?: any,
 ): Promise<any> => {
-  const filters: any = { author: new ObjectId(authorId), isDeleted: false };
-  if (query?.status) filters.status = query.status;
+  const filters: any = { author: new ObjectId(authorId) };
 
-  const select =
-    query?.field !== undefined
-      ? query?.select + ' subCategory'
-      : 'subCategory name description image status';
-
-  const populate = [{ path: 'subCategory', select: 'name' }];
-
-  return await ProviderBaseService.findWithPagination({
-    filters,
-    select,
-    ...query,
-    populate,
+  const profile = await ProfileBaseService.findOne({
+    filters: filters,
+    select: 'name image region isProfileComplete location ability phone email',
+    populate: [
+      {
+        path: 'author',
+        select: 'name image email',
+      },
+    ],
   });
+
+  const services = ProviderBaseService.aggregateWithPagination(
+    [
+      { $match: { ...filters, isDeleted: false } },
+      {
+        $lookup: {
+          from: 'subcategories',
+          localField: 'subCategory',
+          foreignField: '_id',
+          as: 'subCategoryDetails',
+        },
+      },
+      {
+        $unwind: '$subCategoryDetails',
+      },
+      {
+        $project: {
+          _id: 1,
+          name: '$subCategoryDetails.name',
+          description: '$subCategoryDetails.description',
+          image: '$subCategoryDetails.image',
+        },
+      },
+    ],
+    query,
+  );
+
+  const [profileData, servicesData] = await Promise.all([profile, services]);
+
+  // console.log(services.data);
+  return {
+    profile: profileData,
+    services: servicesData.data,
+    pagination: servicesData.pagination,
+  };
 };
 
 // provider total services available count
@@ -228,14 +337,11 @@ const deleteService = async (
   }
 
   if (
-    service.author.toString() !== authorId &&
+    service.author.toString() !== authorId.toString() &&
     role !== Roles.ADMIN &&
     role !== Roles.SUPER_ADMIN
   ) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      'You can only delete your own service',
-    );
+    throw new AppError(httpStatus.FORBIDDEN, 'You are not authorized!');
   }
 
   service.isDeleted = true;
@@ -329,39 +435,10 @@ const ProviderService = {
   getProviderTotalServicesCount,
   getAllServices,
   getSingleService,
-  getProviderSelfServices,
+  providerServicesByAuthorId,
   deleteService,
-  getServiceById,
   serviceQuoteNotification,
   getProviderAllReviews,
 };
 
 export default ProviderService;
-
-//  add services in profile
-const temp = async () => {
-  const providers = await ProfileBaseService.findOne({
-    select: 'serviceCategory',
-    filters: { author: new ObjectId('6943c2cce4eb2f6f65e51e6b') },
-  });
-
-  const subCategories = await SubCategoryBaseService.findMany({
-    filters: {
-      category: providers?.serviceCategory,
-      isDeleted: false,
-    },
-    select: '_id',
-  });
-  console.log(subCategories);
-
-  for (const subCategory of subCategories) {
-    const res = await Service.create({
-      author: '6943c2cce4eb2f6f65e51e6b',
-      subCategory: subCategory._id,
-    } as any);
-    console.log(res);
-  }
-
-  console.log(providers);
-};
-// temp();

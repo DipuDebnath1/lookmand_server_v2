@@ -46,6 +46,20 @@ const FindProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// Find business profile by authorId
+const ProviderSelfProfile = catchAsync(async (req: Request, res: Response) => {
+  const { user }: any = req;
+
+  const profile = await BusinessProfileService.findOrCreateProfile(user._id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Business profile found!',
+    success: true,
+    data: profile,
+  });
+});
+
 // set ability
 const SetAbility = catchAsync(async (req: Request, res: Response) => {
   const { user }: any = req; // Get authorId from user object
@@ -56,7 +70,7 @@ const SetAbility = catchAsync(async (req: Request, res: Response) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Business profile ability updated successfully',
+    message: 'Profile updated successfully',
     success: true,
     data: updatedProfile,
   });
@@ -65,5 +79,6 @@ const SetAbility = catchAsync(async (req: Request, res: Response) => {
 export default {
   CreateOrUpdateProfile,
   FindProfile,
+  ProviderSelfProfile,
   SetAbility,
 };

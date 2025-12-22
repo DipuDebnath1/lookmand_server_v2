@@ -60,16 +60,16 @@ const getSingleService = catchAsync(async (req: Request, res: Response) => {
 });
 
 // get services by provider
-const getServicesByProvider = catchAsync(
+const ProviderServicesByAuthorId = catchAsync(
   async (req: Request, res: Response) => {
-    const { user }: any = req;
-    const services = await providerServiceService.getProviderSelfServices(
-      user._id,
+    const { authorId } = req.params;
+    const services = await providerServiceService.providerServicesByAuthorId(
+      authorId,
       req.query,
     );
     sendResponse(res, {
       statusCode: httpStatus.OK,
-      message: 'Services retrieved successfully',
+      message: 'provider info retrieved successfully',
       success: true,
       data: services,
     });
@@ -131,7 +131,7 @@ const ProviderServiceController = {
   deleteServiceById,
   getAllServices,
   getSingleService,
-  getServicesByProvider,
+  ProviderServicesByAuthorId,
   searchServiceQuoteByProvider,
 };
 

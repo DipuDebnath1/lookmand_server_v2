@@ -34,5 +34,12 @@ router.put(
 );
 
 // Route to find business profile
-router.get('/:id', auth(Roles.COMMON), BusinessProfileController.FindProfile);
+router.get(
+  '/self',
+  auth(Roles.PROVIDER),
+  BusinessProfileController.ProviderSelfProfile,
+);
+
+// Route to find business profile
+router.get('/:id', BusinessProfileController.FindProfile);
 export default router;

@@ -3,9 +3,7 @@ const router = express.Router();
 
 import validationRequest from '../../utils/validationRequest';
 import auth from '../../../middleware/auth';
-import {
-  serviceQuoteSearchValidation,
-} from './service.validation';
+import { serviceQuoteSearchValidation } from './service.validation';
 import ProviderServiceController from './service.controller';
 import { Roles } from '../user/const';
 // File upload configuration
@@ -35,9 +33,8 @@ router.get(
 );
 
 router.get(
-  '/provider/self',
-  auth(Roles.PROVIDER),
-  ProviderServiceController.getServicesByProvider,
+  '/provider/:authorId',
+  ProviderServiceController.ProviderServicesByAuthorId,
 );
 
 router.delete(
