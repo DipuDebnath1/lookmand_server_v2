@@ -1,12 +1,17 @@
 import { Document } from 'mongoose';
+import {
+  SubscriptionAccessFeatures,
+  SubscriptionDurationType,
+  SubscriptionPackageName,
+} from './const';
 
 // subscription interface
 export interface ISubscription extends Document {
-  title: 'Basic' | 'Standard' | 'Premium';
+  title: keyof typeof SubscriptionPackageName;
   price: number;
-  durationType: 'day' | 'week' | 'month' | 'year';
+  durationType: keyof typeof SubscriptionDurationType;
   duration: number;
-  access: Array<string>;
-  description: Array<string>;
+  access: (keyof typeof SubscriptionAccessFeatures)[];
+  description: string[];
   isDeleted: boolean;
 }
