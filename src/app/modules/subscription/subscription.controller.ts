@@ -53,9 +53,9 @@ const UpdateSubscription = catchAsync(async (req, res) => {
   if (!ObjectId.isValid(id)) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid subscription id');
   }
-  const result = await SubscriptionService.updateSubscription(id, req.body);
+  await SubscriptionService.updateSubscription(id, req.body);
   sendResponse(res, {
-    data: result,
+    data: {},
     message: 'Subscription updated successfully',
     statusCode: httpStatus.OK,
     success: true,
@@ -71,9 +71,9 @@ const DeleteSubscription = catchAsync(async (req, res) => {
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid subscription id');
   }
 
-  const result = await SubscriptionService.deleteSubscription(id);
+  await SubscriptionService.deleteSubscription(id);
   sendResponse(res, {
-    data: result,
+    data: {},
     message: 'Subscription deleted successfully',
     statusCode: httpStatus.OK,
     success: true,

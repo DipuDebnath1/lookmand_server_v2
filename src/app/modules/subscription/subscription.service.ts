@@ -15,7 +15,7 @@ const createSubscription = async (subscription: ISubscription) => {
 
 // get all subscriptions
 const getAllSubscriptions = async (query: any) => {
-  const select = 'title price duration description durationType';
+  const select = 'title price duration description durationType access';
   const filter = { isDeleted: false };
   const res = await SubscriptionBaseService.findWithPagination({
     ...query,

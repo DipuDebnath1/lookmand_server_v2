@@ -1,11 +1,19 @@
 import z from 'zod';
+import {
+  SubscriptionAccessFeatures,
+  SubscriptionDurationType,
+  SubscriptionPackageName,
+} from './const';
 
 export const subscriptionCreateValidation = z.object({
   body: z
     .object({
-      title: z.enum(['Basic', 'Standard', 'Premium'], {
-        required_error: 'Title is required',
-      }),
+      title: z.enum(
+        Object.values(SubscriptionPackageName) as [string, ...string[]],
+        {
+          required_error: 'Title is required',
+        },
+      ),
       price: z.number({
         required_error: 'Price is required',
       }),
@@ -17,9 +25,20 @@ export const subscriptionCreateValidation = z.object({
           required_error: 'Description is required',
         }),
       ),
-      durationType: z.enum(['day', 'week', 'month', 'year'], {
-        required_error: 'Type is required',
-      }),
+      durationType: z.enum(
+        Object.values(SubscriptionDurationType) as [string, ...string[]],
+        {
+          required_error: 'Type is required',
+        },
+      ),
+      access: z.array(
+        z.enum(
+          Object.values(SubscriptionAccessFeatures) as [string, ...string[]],
+          {
+            required_error: 'Access feature is required',
+          },
+        ),
+      ),
     })
     .strict(),
 });
@@ -27,11 +46,22 @@ export const subscriptionCreateValidation = z.object({
 export const subscriptionUpdateValidation = z.object({
   body: z
     .object({
-      title: z.string().optional(),
+      title: z
+        .enum(Object.values(SubscriptionPackageName) as [string, ...string[]])
+        .optional(),
       price: z.number().optional(),
       duration: z.number().optional(),
       description: z.array(z.string()).optional(),
-      durationType: z.enum(['day', 'week', 'month', 'year']).optional(),
+      durationType: z
+        .enum(Object.values(SubscriptionDurationType) as [string, ...string[]])
+        .optional(),
+      access: z
+        .array(
+          z.enum(
+            Object.values(SubscriptionAccessFeatures) as [string, ...string[]],
+          ),
+        )
+        .optional(),
     })
     .strict(),
 });

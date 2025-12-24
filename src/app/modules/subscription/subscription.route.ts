@@ -16,13 +16,9 @@ router.post(
   SubscriptionController.CreateSubscription,
 );
 
-router.get('/', auth('common'), SubscriptionController.GetAllSubscriptions);
+router.get('/', SubscriptionController.GetAllSubscriptions);
 
-router.get(
-  '/:id',
-  auth('common'),
-  SubscriptionController.GetSingleSubscription,
-);
+router.get('/:id', SubscriptionController.GetSingleSubscription);
 
 router.put(
   '/:id',

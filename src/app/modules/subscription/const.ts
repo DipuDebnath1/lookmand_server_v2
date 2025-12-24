@@ -13,11 +13,12 @@ export const SubscriptionDurationType = {
 export const SubscriptionAccessFeatures = {
   ContactDetails: 'ContactDetails',
   Calender: 'Calender',
-  Massaging: 'Massaging',
+  Massaging: 'Massage',
   Call: 'Call',
   Email: 'Email',
   Quote: 'Quote',
   Adds: 'Adds',
   AddFavorites: 'AddFavorites',
   Reviews: 'Reviews',
-};
+  OpeningHours: 'OpeningHours',
+} as const;
