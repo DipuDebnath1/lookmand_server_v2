@@ -1,5 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { ISubscriptionPurchase } from './subscriptionPurchases.type';
+import { SubscriptionPurchaseStatus } from './const';
+import { SubscriptionAccessFeatures } from '../subscription/const';
 
 // subscription purchase schema
 const subscriptionPurchaseSchema = new Schema<ISubscriptionPurchase>(
@@ -10,12 +12,16 @@ const subscriptionPurchaseSchema = new Schema<ISubscriptionPurchase>(
       required: true,
       ref: 'Subscription',
     },
-    access: { type: [String], required: true },
+    access: {
+      type: [String],
+      enum: Object.values(SubscriptionAccessFeatures),
+      required: true,
+    },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     status: {
       type: String,
-      enum: ['pending', 'active', 'expired', 'cancelled'],
+      enum: Object.values(SubscriptionPurchaseStatus),
       required: true,
     },
   },

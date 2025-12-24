@@ -1,24 +1,22 @@
 import httpStatus from 'http-status';
 import AppError from '../ErrorHandler/AppError';
+import { SubscriptionDurationType } from '../modules/subscription/const';
 
 // Helper function to add duration to the current date
 const calculateEndDate = (
   duration: number,
-  type: 'day' | 'week' | 'month' | 'year',
+  type: keyof typeof SubscriptionDurationType,
 ): Date => {
   const startDate = new Date();
 
   switch (type) {
-    case 'day':
+    case SubscriptionDurationType.Day:
       startDate.setDate(startDate.getDate() + duration);
       break;
-    case 'week':
-      startDate.setDate(startDate.getDate() + duration * 7); // 7 days in a week
-      break;
-    case 'month':
+    case SubscriptionDurationType.Month:
       startDate.setMonth(startDate.getMonth() + duration);
       break;
-    case 'year':
+    case SubscriptionDurationType.Year:
       startDate.setFullYear(startDate.getFullYear() + duration);
       break;
     default:

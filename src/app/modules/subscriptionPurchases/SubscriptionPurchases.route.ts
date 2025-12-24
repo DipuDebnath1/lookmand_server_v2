@@ -1,22 +1,22 @@
 import express from 'express';
 import auth from '../../../middleware/auth';
 import SubscriptionPurchasesController from './SubscriptionPurchases.controller';
+import { Roles } from '../user/const';
 const router = express.Router();
 
 router.post(
-  '/:subscriptionId/basic',
-  auth('provider'),
-  SubscriptionPurchasesController.BasicSubscriptionPurchases,
+  '/:subscriptionId/direct',
+  auth(Roles.PROVIDER),
+  SubscriptionPurchasesController.SubscriptionPurchasesWithoutPayment,
 );
 router.post(
-  '/:subscriptionId/premium',
-  auth('provider'),
-  SubscriptionPurchasesController.PaidSubscriptionPurchases,
+  '/:subscriptionId/webhook',
+  SubscriptionPurchasesController.SubscriptionPurchasesWithPayment,
 );
 
 router.get(
   '/current-plan',
-  auth('provider'),
+  auth(Roles.PROVIDER),
   SubscriptionPurchasesController.ProviderSubscriptionCurrentPlan,
 );
 

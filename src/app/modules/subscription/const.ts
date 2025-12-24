@@ -4,10 +4,16 @@ export const SubscriptionPackageName = {
   Premium: 'Premium',
 } as const;
 
+export const SubscriptionDirectPurchasePermission = {
+  Basic: 'Basic',
+  Standard: 'Standard',
+  Premium: 'Premium',
+} as const;
+
 export const SubscriptionDurationType = {
-  Day: 'day',
-  Month: 'month',
-  Year: 'year',
+  Day: 'Day',
+  Month: 'Month',
+  Year: 'Year',
 } as const;
 
 export const SubscriptionAccessFeatures = {

@@ -4,38 +4,56 @@ import SubscriptionPurchase from './SubscriptionPurchases.model';
 import calculateEndDate from '../../utils/calculateEndDate';
 import Subscription from '../subscription/subscription.model';
 import { setAgendaSchedule } from '../../../agenda/AgendaJobDefine';
-import { Types } from 'mongoose';
 import { ISubscriptionPurchasePopulated } from './subscriptionPurchases.type';
-
-const { ObjectId } = Types;
+import {
+  SubscriptionDirectPurchasePermission,
+  SubscriptionPackageName,
+} from '../subscription/const';
+import { SubscriptionPurchaseStatus } from './const';
+import { AgendaJobNames } from '../../../agenda/const';
 
 // Main function to create a subscription purchase
 const subscriptionPurchase = async (
   author: string,
   subscriptionId: string,
-  checkBasicSubscription: boolean,
-  onlyBasicSubscription: boolean,
+  directPurchase: boolean,
 ) => {
-  const subscription = await Subscription.findById(subscriptionId);
+  const subscription = await Subscription.findById(subscriptionId).select(
+    'title duration durationType access',
+  );
 
   // Check if subscription exists
   if (!subscription)
     throw new AppError(httpStatus.BAD_REQUEST, 'Subscription not found');
 
-  // If onlyBasicSubscription is true, ensure the subscription is "Basic"
-  if (onlyBasicSubscription && subscription.title !== 'Basic')
+  // If it's a direct purchase, check if the subscription allows it
+  if (
+    directPurchase &&
+    !Object.keys(SubscriptionDirectPurchasePermission).includes(
+      subscription.title,
+    )
+  ) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'Only Basic subscription can be purchased.',
+      'need payment for this subscription',
     );
+  }
 
-  // Prevent multiple purchases of the "Basic" subscription
-  if (checkBasicSubscription && subscription.title === 'Basic') {
-    const alreadyPurchased = await alreadyPurchasedBasicSubscription(author);
-    if (alreadyPurchased) {
+  // check is active any subscription purchase exists can't purchase basic
+
+  if (subscription.title === SubscriptionPackageName.Basic) {
+    //
+    const existingActivePurchase = await SubscriptionPurchase.findOne({
+      author,
+      status: SubscriptionPurchaseStatus.active,
+      endDate: { $gt: new Date() },
+    });
+
+    //
+    if (existingActivePurchase) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
-        'Sorry, You can only purchase the Basic subscription once.',
+        'You already have an active subscription',
       );
     }
   }
@@ -52,43 +70,16 @@ const subscriptionPurchase = async (
     subscription: subscriptionId,
     startDate: new Date(),
     endDate: endDate,
-    status: 'active',
+    access: subscription.access,
+    status: SubscriptionPurchaseStatus.active,
   });
 
   // Schedule a job to handle subscription expiration
-  setAgendaSchedule('subscription expire', endDate, {
+  setAgendaSchedule(AgendaJobNames.SubscriptionExpire, endDate, {
     _id: subscriptionPurchase._id,
   });
 
   return subscriptionPurchase;
-};
-
-// Helper function to check if a user has already purchased the "Basic" subscription
-const alreadyPurchasedBasicSubscription = async (author: string) => {
-  const existingPurchase = await Subscription.aggregate([
-    {
-      $match: {
-        title: 'Basic',
-      },
-    },
-    {
-      $lookup: {
-        from: 'subscriptionpurchases',
-        localField: '_id',
-        foreignField: 'subscription',
-        as: 'purchases',
-      },
-    },
-    {
-      $unwind: '$purchases',
-    },
-    { $match: { 'purchases.author': new ObjectId(author) } },
-  ]);
-
-  if (existingPurchase.length > 0) {
-    return true; // User has already purchased the Basic subscription
-  }
-  return false; // User has not purchased the Basic subscription
 };
 
 // get provider subscription current plan
@@ -107,7 +98,7 @@ const isValidSubscription = async (providerId: string) => {
   if (
     !subscription || // no subscription found
     subscription === null ||
-    subscription.status !== 'active' || // subscription not active
+    subscription.status !== SubscriptionPurchaseStatus.active || // subscription not active
     new Date(subscription.endDate) < new Date() // subscription expired
   )
     return false; // invalid subscription

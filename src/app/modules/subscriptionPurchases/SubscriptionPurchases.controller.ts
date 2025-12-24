@@ -10,7 +10,7 @@ import transactionService from '../transaction/transaction.service';
 const ObjectId = Types.ObjectId;
 
 // basic purchase subscription
-const BasicSubscriptionPurchases = catchAsync(async (req, res) => {
+const SubscriptionPurchasesWithoutPayment = catchAsync(async (req, res) => {
   const { subscriptionId } = req.params;
   const { user }: any = req;
 
@@ -23,7 +23,6 @@ const BasicSubscriptionPurchases = catchAsync(async (req, res) => {
       user?._id,
       subscriptionId,
       true, // Check for basic subscription purchase
-      true, // Only allow basic subscription purchase
     );
 
   sendResponse(res, {
@@ -35,9 +34,8 @@ const BasicSubscriptionPurchases = catchAsync(async (req, res) => {
 });
 
 // paid subscription
-const PaidSubscriptionPurchases = catchAsync(async (req, res) => {
-  const { subscriptionId } = req.params;
-  const { user }: any = req;
+const SubscriptionPurchasesWithPayment = catchAsync(async (req, res) => {
+  const { userId, subscriptionId }: any = req.body;
 
   if (!ObjectId.isValid(subscriptionId))
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid subscription id');
@@ -45,15 +43,14 @@ const PaidSubscriptionPurchases = catchAsync(async (req, res) => {
   // Proceed with purchasing the paid subscription
   const subscriptionPurchase =
     await SubscriptionPurchasesService.subscriptionPurchase(
-      user?._id,
+      userId,
       subscriptionId,
-      true, // Check for basic subscription purchase
-      false, // Only allow basic subscription purchase
+      false, // direct purchase set to true for webhook
     );
 
   // create transaction for paid subscription
   await transactionService.saveTransactionInfo({
-    author: user?._id,
+    author: userId,
     subscriptionPurchase: subscriptionPurchase._id,
   } as any);
 
@@ -84,8 +81,8 @@ const ProviderSubscriptionCurrentPlan = catchAsync(async (req, res) => {
 });
 
 const SubscriptionPurchasesController = {
-  BasicSubscriptionPurchases,
-  PaidSubscriptionPurchases,
+  SubscriptionPurchasesWithoutPayment,
+  SubscriptionPurchasesWithPayment,
   ProviderSubscriptionCurrentPlan,
 };
 

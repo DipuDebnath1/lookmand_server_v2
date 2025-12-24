@@ -3,13 +3,14 @@ import { Job } from 'agenda';
 import SubscriptionPurchase from '../../app/modules/subscriptionPurchases/SubscriptionPurchases.model';
 import { logger } from '../../app/logger';
 import notificationService from '../../app/modules/notification/notification.service';
+import { AgendaJobNames } from '../const';
 
 export interface SendEmailReminderData {
   _id: string;
 }
 
 export const subscriptionExpireJob = {
-  name: 'subscription expire',
+  name: AgendaJobNames.SubscriptionExpire,
   handler: async (job: Job<SendEmailReminderData>) => {
     try {
       const { _id } = job.attrs.data;
