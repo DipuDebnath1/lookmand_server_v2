@@ -13,6 +13,8 @@ import {
   ProviderBaseService,
   SubCategoryBaseService,
 } from '../../../service';
+import { SubscriptionPurchaseStatus } from '../subscriptionPurchases/const';
+import { SubscriptionPackageName } from '../subscription/const';
 
 const ObjectId = Types.ObjectId;
 
@@ -137,6 +139,60 @@ const getAllServices = async (query?: any) => {
           }
         : { 'profileDetails.isProfileComplete': true },
     },
+    // Lookup subscription purchase for the author
+    {
+      $lookup: {
+        from: 'subscriptionpurchases',
+        let: { authorId: '$author' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$author', '$$authorId'] },
+                  { $eq: ['$status', 'active'] },
+                ],
+              },
+            },
+          },
+          { $sort: { endDate: -1 } },
+          { $limit: 1 },
+        ],
+        as: 'subscriptionPurchase',
+      },
+    },
+    {
+      $unwind: {
+        path: '$subscriptionPurchase',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $match: {
+        $and: [
+          { 'subscriptionPurchase.endDate': { $gt: new Date() } },
+          { 'subscriptionPurchase.status': SubscriptionPurchaseStatus.active },
+        ],
+      },
+    },
+
+    // Lookup subscription details
+    {
+      $lookup: {
+        from: 'subscriptions',
+        localField: 'subscriptionPurchase.subscription',
+        foreignField: '_id',
+        as: 'subscriptionDetails',
+      },
+    },
+    {
+      $unwind: {
+        path: '$subscriptionDetails',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
     {
       $project: {
         _id: 1,
@@ -155,6 +211,26 @@ const getAllServices = async (query?: any) => {
           description: '$profileDetails.description',
           phone: '$profileDetails.phone',
         },
+        isSponsored: {
+          $cond: {
+            if: ['$subscriptionDetails.title', SubscriptionPackageName.Premium],
+            then: true,
+            else: false,
+          },
+        },
+        isSubscribed: {
+          $cond: {
+            if: {
+              $or: [
+                { $eq: ['$subscriptionDetails.title', 'Premium'] },
+                { $eq: ['$subscriptionDetails.title', 'Standard'] },
+              ],
+            },
+            then: true,
+            else: false,
+          },
+        },
+        accessibleBySubscription: '$subscriptionPurchase.access',
       },
     },
     //  send one service per provider
@@ -231,6 +307,48 @@ const getSingleService = async (serviceId: string) => {
       $match: { 'profileDetails.isProfileComplete': true },
     },
     {
+      $lookup: {
+        from: 'subscriptionpurchases',
+        let: { authorId: '$author' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$author', '$$authorId'] },
+                  { $eq: ['$status', 'active'] },
+                ],
+              },
+            },
+          },
+          { $sort: { endDate: -1 } },
+          { $limit: 1 },
+        ],
+        as: 'subscriptionPurchase',
+      },
+    },
+    {
+      $unwind: {
+        path: '$subscriptionPurchase',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'subscriptions',
+        localField: 'subscriptionPurchase.subscription',
+        foreignField: '_id',
+        as: 'subscriptionDetails',
+      },
+    },
+    {
+      $unwind: {
+        path: '$subscriptionDetails',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
       $project: {
         _id: 1,
         author: {
@@ -253,6 +371,26 @@ const getSingleService = async (serviceId: string) => {
           phone: '$profileDetails.phone',
           availability: '$profileDetails.availability',
         },
+        isSponsored: {
+          $cond: {
+            if: ['$subscriptionDetails.title', SubscriptionPackageName.Premium],
+            then: true,
+            else: false,
+          },
+        },
+        isSubscribed: {
+          $cond: {
+            if: {
+              $or: [
+                { $eq: ['$subscriptionDetails.title', 'Premium'] },
+                { $eq: ['$subscriptionDetails.title', 'Standard'] },
+              ],
+            },
+            then: true,
+            else: false,
+          },
+        },
+        accessibleBySubscription: '$subscriptionPurchase.access',
       },
     },
   ];
