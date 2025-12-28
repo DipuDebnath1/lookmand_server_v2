@@ -1,6 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { IServiceBooking } from './serviceBooking.type';
 import { bookingStatuses } from './const';
+import { Region } from '../user/const';
 
 const serviceBookingSchema = new Schema<IServiceBooking>(
   {
@@ -12,6 +13,11 @@ const serviceBookingSchema = new Schema<IServiceBooking>(
     },
     details: { type: String, required: true },
     bookingDate: { type: Date, required: true },
+    region: {
+      type: String,
+      required: true,
+      enum: Object.keys(Region),
+    },
     location: {
       type: String,
       required: true,

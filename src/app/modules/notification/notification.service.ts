@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NotificationBaseService } from '../../../service';
+import { SocketRoomId } from '../../../service/const';
 import sendPushNotification from '../../../service/sendPushNotification';
+import SocketService from '../../../service/socketService';
 import { logger } from '../../logger';
 import { SubCategoryService } from '../category/category.service';
 import { User } from '../user';
@@ -36,6 +38,13 @@ class NotificationService {
           payload.description || '',
         );
       }
+
+      // send socket notification
+      SocketService.sendDataToUserWithSocketId({
+        data: res,
+        userId: res.user?.toString(),
+        roomId: SocketRoomId.Notification,
+      });
 
       return notificationData;
     } catch (err: any) {

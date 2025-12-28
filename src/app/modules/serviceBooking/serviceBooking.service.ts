@@ -2,14 +2,13 @@
 import httpStatus from 'http-status';
 import { PipelineStage, Types } from 'mongoose';
 import AppError from '../../ErrorHandler/AppError';
-import dashboardService from '../dashboard/dashboard.service';
 import ServiceBooking from './serviceBooking.model';
 import { IServiceBooking } from './serviceBooking.type';
 import Service from '../service/service.model';
 import { BookingBaseService } from '../../../service';
 const ObjectId = Types.ObjectId;
 
-dashboardService.dashboardServiceStatistics();
+// dashboardService.dashboardServiceStatistics();
 
 // Book a service
 const bookService = async (payload: IServiceBooking) => {
@@ -17,8 +16,8 @@ const bookService = async (payload: IServiceBooking) => {
 };
 
 // get user bookings
-const getUserBookings = async (userId: string, query: any) => {
-  const filter: any = { author: new ObjectId(userId), isDeleted: false };
+const getUserBookings = async (authorId: string, query: any) => {
+  const filter: any = { author: new ObjectId(authorId), isDeleted: false };
   if (query?.status) filter.status = query.status;
 
   const select = 'service status createdAt';
@@ -30,6 +29,19 @@ const getUserBookings = async (userId: string, query: any) => {
       populate: [{ path: 'subCategory', select: 'name' }],
     },
   ];
+
+  // const Pipeline: PipelineStage[] = [
+  //   { $match: { author: new ObjectId(authorId), isDeleted: false } },
+  //   {
+  //     $lookup: {
+  //       from: 'services',
+  //       localField: 'service',
+  //       foreignField: '_id',
+  //       as: 'service',
+  //     },
+  //   },
+  // ];
+
   const bookings = await BookingBaseService.findWithPagination({
     filters: filter,
     select,

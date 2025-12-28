@@ -8,6 +8,11 @@ import httpStatus from 'http-status';
 import serviceBookingService from './serviceBooking.service';
 import notificationService from '../notification/notification.service';
 import ProviderService from '../service/service.service';
+import { notificationTypes } from '../notification/notification.const';
+import { Roles } from '../user/const';
+import SubscriptionPurchase from '../subscriptionPurchases/SubscriptionPurchases.model';
+import { SubscriptionPurchaseStatus } from '../subscriptionPurchases/const';
+import { SubscriptionPackageName } from '../subscription/const';
 const ObjectId = Types.ObjectId;
 
 // Book a service
@@ -32,6 +37,26 @@ const BookService = catchAsync(async (req: Request, res: Response) => {
   if (!service || service.isDeleted)
     throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
 
+  // check provider is subscribe status
+  const subscribeStatus = await SubscriptionPurchase.findOne({
+    author: service.author,
+    isActive: true,
+  })
+    .sort({ createdAt: -1 })
+    .select('isActive subscription')
+    .populate({
+      path: 'subscription',
+      select: 'title',
+    });
+
+  if (
+    !subscribeStatus ||
+    subscribeStatus.status !== SubscriptionPurchaseStatus.active ||
+    (subscribeStatus as any).subscription.title !==
+      (SubscriptionPackageName.Premium || SubscriptionPackageName.Standard)
+  )
+    throw new AppError(httpStatus.FORBIDDEN, 'this provider not eligible.');
+
   // create booking
   const bookingData = {
     ...req.body,
@@ -48,8 +73,8 @@ const BookService = catchAsync(async (req: Request, res: Response) => {
       title: 'New Service Booking',
       description: `${user.name} has sent a booking request for your service.`,
       service: service._id as any,
-      type: 'serviceBooking',
-      role: 'provider',
+      type: notificationTypes.serviceBooking,
+      role: Roles.PROVIDER,
     },
     { pushNotification: true },
   );

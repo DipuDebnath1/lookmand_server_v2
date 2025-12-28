@@ -1,6 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { INotification } from './notification.interface';
 import { roles } from '../../utils/roles';
+import { notificationTypes } from './notification.const';
 
 const notificationSchema = new Schema<INotification>(
   {
@@ -21,13 +22,7 @@ const notificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: [
-        'general',
-        'service',
-        'serviceApproval',
-        'serviceBooking',
-        'serviceQuote',
-      ],
+      enum: Object.keys(notificationTypes),
       required: true,
     },
     isViewed: { type: Boolean, required: false, default: false },

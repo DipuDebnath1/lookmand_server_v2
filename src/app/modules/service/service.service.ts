@@ -97,10 +97,10 @@ const getAllServices = async (query?: any) => {
     isDeleted: false,
   };
 
-  const objSubCategory = new ObjectId(subCategory);
-
-  if ((subCategory && ObjectId.isValid(subCategory)) || query.subCategoryIds) {
-    matchSubCategory.subCategory = objSubCategory || query.subCategoryIds;
+  if (subCategory && ObjectId.isValid(subCategory)) {
+    matchSubCategory.subCategory = new ObjectId(subCategory);
+  } else {
+    matchSubCategory.subCategory = query.subCategoryIds;
   }
 
   const pipeline: PipelineStage[] = [
@@ -213,7 +213,13 @@ const getAllServices = async (query?: any) => {
         },
         isSponsored: {
           $cond: {
-            if: ['$subscriptionDetails.title', SubscriptionPackageName.Premium],
+            if: {
+              $eq: [
+                '$subscriptionDetails.title',
+                SubscriptionPackageName.Premium,
+              ],
+            },
+
             then: true,
             else: false,
           },
@@ -243,6 +249,9 @@ const getAllServices = async (query?: any) => {
     // Reshape the output to match the original structure
     {
       $replaceRoot: { newRoot: '$service' },
+    },
+    {
+      $sort: { isSponsored: -1, isSubscribed: -1 },
     },
   ];
 
@@ -568,6 +577,15 @@ const getProviderAllReviews = async (providerId: string, query: any) => {
   return reviews;
 };
 
+// get provider service by get service id
+const getServiceById = async (serviceId: string) => {
+  const service = await ProviderBaseService.findOne({
+    filters: { _id: new ObjectId(serviceId) },
+    select: '_id isDeleted author',
+  });
+  return service;
+};
+
 const ProviderService = {
   createService,
   getProviderTotalServicesCount,
@@ -577,6 +595,7 @@ const ProviderService = {
   deleteService,
   serviceQuoteNotification,
   getProviderAllReviews,
+  getServiceById,
 };
 
 export default ProviderService;

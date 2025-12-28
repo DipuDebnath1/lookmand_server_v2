@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Region } from '../user/const';
 
 export const ServiceBookingValidation = z.object({
   body: z
@@ -16,7 +17,10 @@ export const ServiceBookingValidation = z.object({
           required_error: 'Booking date is required',
         })
         .refine((date) => !isNaN(Date.parse(date)), 'Invalid date format'),
-      location: z.enum(['north', 'south', 'east', 'west']),
+      region: z.enum(Object.keys(Region) as [string, ...string[]]),
+      location: z.string({
+        required_error: 'Location is required',
+      }),
     })
     .strict(), // .strict() will disallow unknown keys
 });

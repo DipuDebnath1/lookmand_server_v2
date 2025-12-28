@@ -27,4 +27,5 @@ export const SubscriptionAccessFeatures = {
   AddFavorites: 'AddFavorites',
   Reviews: 'Reviews',
   OpeningHours: 'OpeningHours',
+  ServiceBooking: 'ServiceBooking',
 } as const;
