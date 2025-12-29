@@ -27,6 +27,13 @@ class NotificationService {
         'name image',
       );
 
+      // send socket notification
+      SocketService.sendDataToUserWithSocketId({
+        data: notificationData,
+        userId: res.user as any,
+        roomId: SocketRoomId.Notification,
+      });
+
       // Send push notification
       if (notificationType?.pushNotification) {
         const user = await User.findById(payload.user).select('fcmToken');
@@ -38,13 +45,6 @@ class NotificationService {
           payload.description || '',
         );
       }
-
-      // send socket notification
-      SocketService.sendDataToUserWithSocketId({
-        data: res,
-        userId: res.user?.toString(),
-        roomId: SocketRoomId.Notification,
-      });
 
       return notificationData;
     } catch (err: any) {

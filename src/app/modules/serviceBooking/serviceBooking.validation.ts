@@ -7,7 +7,7 @@ export const ServiceBookingValidation = z.object({
       service: z.string({
         required_error: 'Service is required',
       }),
-      description: z
+      details: z
         .string({
           required_error: 'Description is required',
         })

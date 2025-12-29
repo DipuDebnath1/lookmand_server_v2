@@ -22,9 +22,9 @@ type TSendDataToUsersWithSocketId = {
 
 // socket message to specific user by socket id
 const sendDataToUserWithSocketId = (payload: TSendDataToUserWithSocketId) => {
-  const onlineUsersSocketId = onlineUsers.get(payload.userId);
-  if (!onlineUsersSocketId) return; // user is
   try {
+    const onlineUsersSocketId = onlineUsers.get(payload.userId.toString());
+    if (!onlineUsersSocketId) return; // user is
     io.to(onlineUsersSocketId).emit(payload.roomId, payload.data);
   } catch (error) {
     logger.error(
@@ -82,7 +82,7 @@ const sendUnreadNotificationCount = async (userId: string) => {
 
     if (!userId) return;
     const unreadNotificationCount = await Notification.countDocuments({
-      author: new ObjectId(userId),
+      user: new ObjectId(userId),
       isViewed: false,
     });
 

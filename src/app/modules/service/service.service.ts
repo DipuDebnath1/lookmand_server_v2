@@ -113,6 +113,7 @@ const getAllServices = async (query?: any) => {
         localField: 'subCategory',
         foreignField: '_id',
         as: 'subCategoryDetails',
+        pipeline: [{ $match: { isDeleted: false } }],
       },
     },
     {

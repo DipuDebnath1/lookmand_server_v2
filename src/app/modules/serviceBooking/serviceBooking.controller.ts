@@ -7,12 +7,16 @@ import catchAsync from '../../utils/catchAsync';
 import httpStatus from 'http-status';
 import serviceBookingService from './serviceBooking.service';
 import notificationService from '../notification/notification.service';
-import ProviderService from '../service/service.service';
 import { notificationTypes } from '../notification/notification.const';
 import { Roles } from '../user/const';
-import SubscriptionPurchase from '../subscriptionPurchases/SubscriptionPurchases.model';
 import { SubscriptionPurchaseStatus } from '../subscriptionPurchases/const';
-import { SubscriptionPackageName } from '../subscription/const';
+import { SubscriptionAccessFeatures } from '../subscription/const';
+import {
+  BookingBaseService,
+  ProviderBaseService,
+  SubscriptionPurchaseBaseService,
+} from '../../../service';
+import { bookingStatuses } from './const';
 const ObjectId = Types.ObjectId;
 
 // Book a service
@@ -31,29 +35,44 @@ const BookService = catchAsync(async (req: Request, res: Response) => {
   )
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid booking date');
 
-  // check if service exists and is approved
-  const service = await ProviderService.getServiceById(serviceId);
-  // check if service exists and is approved
-  if (!service || service.isDeleted)
-    throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
+  const checkExistingBooking = await BookingBaseService.findOne({
+    filters: {
+      service: new ObjectId(serviceId),
+      status: { $in: [bookingStatuses.pending, bookingStatuses.accepted] },
+      isDeleted: false,
+    },
+    select: 'status',
+  });
+  if (checkExistingBooking)
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `this service booking status '${checkExistingBooking.status}'`,
+    );
 
+  // check if service exists and is approved
+  const service = await ProviderBaseService.findOne({
+    filters: {
+      _id: new ObjectId(serviceId),
+      isDeleted: false,
+    },
+    select: 'author',
+  });
+  // check if service exists and is approved
+  if (!service) throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
   // check provider is subscribe status
-  const subscribeStatus = await SubscriptionPurchase.findOne({
-    author: service.author,
-    isActive: true,
-  })
-    .sort({ createdAt: -1 })
-    .select('isActive subscription')
-    .populate({
-      path: 'subscription',
-      select: 'title',
-    });
+  const subscribeStatus = await SubscriptionPurchaseBaseService.findOne({
+    filters: {
+      author: service.author,
+      status: SubscriptionPurchaseStatus.active,
+    },
+    select: 'status subscription access',
+    sort: { createdAt: -1 },
+  });
 
   if (
     !subscribeStatus ||
     subscribeStatus.status !== SubscriptionPurchaseStatus.active ||
-    (subscribeStatus as any).subscription.title !==
-      (SubscriptionPackageName.Premium || SubscriptionPackageName.Standard)
+    !subscribeStatus.access.includes(SubscriptionAccessFeatures.ServiceBooking)
   )
     throw new AppError(httpStatus.FORBIDDEN, 'this provider not eligible.');
 
@@ -64,6 +83,14 @@ const BookService = catchAsync(async (req: Request, res: Response) => {
     service: serviceId,
   };
   const booking = await serviceBookingService.bookService(bookingData);
+
+  // send response
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    message: 'Service booked successfully',
+    success: true,
+    data: booking,
+  });
 
   // notify provider about new booking
   notificationService.sendNotification(
@@ -78,14 +105,6 @@ const BookService = catchAsync(async (req: Request, res: Response) => {
     },
     { pushNotification: true },
   );
-
-  // send response
-  sendResponse(res, {
-    statusCode: httpStatus.CREATED,
-    message: 'Service booked successfully',
-    success: true,
-    data: booking,
-  });
 });
 
 // get user bookings

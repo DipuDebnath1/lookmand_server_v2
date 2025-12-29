@@ -1,10 +1,10 @@
 export const SocketRoomId = {
-  Message: 'message',
-  Conversation: 'conversation',
-  Notification: 'notification',
-  UnreadNotificationCount: 'unreadNotificationCount',
-  OnlineUsers: 'onlineUsers',
-  newBookingRequest: 'newBookingRequest',
-  removeBookingRequest: 'removeBookingRequest',
-  orderStatusUpdate: 'orderStatusUpdate',
-};
+  Message: 'Message',
+  Conversation: 'Conversation',
+  Notification: 'Notification',
+  UnreadNotificationCount: 'UnreadNotificationCount',
+  OnlineUsers: 'OnlineUsers',
+  NewBookingRequest: 'NewBookingRequest',
+  RemoveBookingRequest: 'RemoveBookingRequest',
+  OrderStatusUpdate: 'OrderStatusUpdate',
+} as const;
