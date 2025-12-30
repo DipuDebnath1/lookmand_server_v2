@@ -7,7 +7,6 @@ import conversationService from './conversation.service';
 import { Types } from 'mongoose';
 import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
-import BusinessProfile from '../businessProfile/businessProfile.model';
 import { Roles } from '../user/const';
 const { ObjectId } = Types;
 
@@ -17,14 +16,23 @@ const CreateConversation = catchAsync(async (req, res) => {
   const userId = user?._id;
   const { receiverId } = req.body;
 
-  if (!receiverId || !ObjectId.isValid(receiverId))
+  if (!receiverId || !ObjectId.isValid(receiverId) || receiverId === userId)
     throw new Error('Invalid receiver ID');
 
-  const author = await BusinessProfile.findById(receiverId).select('author');
+  // if provider, check subscription
+  if (
+    user.role === Roles.PROVIDER &&
+    !(await SubscriptionPurchasesService.haveMessageAccess(userId))
+  )
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      `You don't have message access! 
+       Please subscribe to a plan.`,
+    );
 
   const conversation = await conversationService.createConversation(
     userId,
-    author!?.author.toString(),
+    receiverId,
   );
 
   sendResponse(res, {
@@ -53,19 +61,9 @@ const GetAllConversations = catchAsync(async (req, res) => {
 
 // send message in a conversation
 const SendMessageInConversation = catchAsync(async (req, res) => {
-  const { user, role }: any = req;
+  const { user }: any = req;
   const userId = user?._id;
   const { conversationId } = req.params;
-
-  // if provider, check subscription
-  if (
-    role === Roles.PROVIDER &&
-    !SubscriptionPurchasesService.isValidSubscription(userId)
-  )
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      'You need an active subscription to send messages. Please subscribe to a plan.',
-    );
 
   // validate conversationId
   if (!ObjectId.isValid(conversationId))
@@ -84,8 +82,19 @@ const SendMessageInConversation = catchAsync(async (req, res) => {
       'Message text or image is required',
     );
 
+  // if provider, check subscription
+  if (
+    user.role === Roles.PROVIDER &&
+    !(await SubscriptionPurchasesService.haveMessageAccess(userId))
+  )
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      `You don't have message access! 
+       Please subscribe to a plan.`,
+    );
+
   // send message
-  const message = await conversationService.sendMessageInConversation(
+  await conversationService.sendMessageInConversation(
     userId,
     conversationId,
     req.body,
@@ -95,7 +104,7 @@ const SendMessageInConversation = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     message: 'Message sent successfully',
-    data: message,
+    data: {},
     statusCode: 200,
   });
 });

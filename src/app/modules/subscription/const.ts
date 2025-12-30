@@ -19,7 +19,7 @@ export const SubscriptionDurationType = {
 export const SubscriptionAccessFeatures = {
   ContactDetails: 'ContactDetails',
   Calender: 'Calender',
-  Massaging: 'Massage',
+  Massaging: 'Massaging',
   Call: 'Call',
   Email: 'Email',
   Quote: 'Quote',

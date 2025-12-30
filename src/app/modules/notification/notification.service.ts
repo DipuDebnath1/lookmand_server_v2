@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NotificationBaseService } from '../../../service';
-import { SocketRoomId } from '../../../service/const';
 import sendPushNotification from '../../../service/sendPushNotification';
 import SocketService from '../../../service/socketService';
 import { logger } from '../../logger';
@@ -28,10 +27,9 @@ class NotificationService {
       );
 
       // send socket notification
-      SocketService.sendDataToUserWithSocketId({
+      SocketService.sendNotificationBySocket({
         data: notificationData,
         userId: res.user as any,
-        roomId: SocketRoomId.Notification,
       });
 
       // Send push notification

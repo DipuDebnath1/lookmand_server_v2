@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import admin from 'firebase-admin';
 import path from 'path';
 import { logger } from '../app/logger';

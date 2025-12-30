@@ -1,10 +1,13 @@
-/* eslint-disable no-undef */
 import { onlineUsers } from '../config/socketIO';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from 'mongoose';
 import { logger } from '../app/logger';
 import Notification from '../app/modules/notification/notification.model';
 import { SocketRoomId } from './const';
+import {
+  IConversation,
+  IMessage,
+} from '../app/modules/conversation/conversation.type';
 
 const { ObjectId } = Types;
 
@@ -18,6 +21,11 @@ type TSendDataToUsersWithSocketId = {
   roomId: string;
   usersId: string[];
   data: any;
+};
+
+type TConversationPayload = {
+  conversation: IConversation;
+  message?: IMessage;
 };
 
 // socket message to specific user by socket id
@@ -99,12 +107,69 @@ const sendUnreadNotificationCount = async (userId: string) => {
   }
 };
 
+// socket message to specific user by socket id
+const sendNotificationBySocket = (payload: { userId: string; data: any }) => {
+  try {
+    const onlineUsersSocketId = onlineUsers.get(payload.userId.toString());
+    if (!onlineUsersSocketId) return; // user is
+    io.to(onlineUsersSocketId).emit(SocketRoomId.Notification, payload.data);
+    // also send unread notification count
+    sendUnreadNotificationCount(payload.userId);
+  } catch (error) {
+    logger.error(
+      `socket message sending failed Unexpected error: ${JSON.stringify(error)}`,
+    );
+  }
+};
+
+// socket message to specific user by socket id
+const sendConversationDataToUserWithSocketId = (
+  payload: TConversationPayload,
+) => {
+  try {
+    payload.conversation.users.forEach((user: any) => {
+      // skip sending to self
+      const users = payload.conversation.users.filter(
+        (u) => u._id.toString() !== user._id.toString(),
+      );
+
+      const conversationData = {
+        ...payload.conversation.toObject(),
+        users,
+      };
+
+      // get socket id
+      const onlineUsersSocketId = onlineUsers.get(user._id.toString());
+
+      if (!onlineUsersSocketId) return; // user is
+      // send conversation data to user
+      io.to(onlineUsersSocketId).emit(
+        SocketRoomId.Conversation,
+        conversationData,
+      );
+
+      // send new message to user
+      if (payload.message)
+        io.to(onlineUsersSocketId).emit(SocketRoomId.Message, {
+          newMessage: payload.message,
+        });
+    });
+  } catch (error) {
+    logger.error(
+      `socket message sending failed Unexpected error: ${JSON.stringify(error)}`,
+    );
+  }
+};
+
+// export socket service
 const SocketService = {
   sendDataToUserWithSocketId,
   sendDataToUsersWithSocketId,
   sendDataToRoom,
   sendOnlineUsers,
   sendUnreadNotificationCount,
+  sendNotificationBySocket,
+  sendConversationDataToUserWithSocketId,
 };
 
 export default SocketService;

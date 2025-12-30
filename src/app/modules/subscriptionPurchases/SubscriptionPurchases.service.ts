@@ -6,6 +6,7 @@ import Subscription from '../subscription/subscription.model';
 import { setAgendaSchedule } from '../../../agenda/AgendaJobDefine';
 import { ISubscriptionPurchasePopulated } from './subscriptionPurchases.type';
 import {
+  SubscriptionAccessFeatures,
   SubscriptionDirectPurchasePermission,
   SubscriptionPackageName,
 } from '../subscription/const';
@@ -106,10 +107,27 @@ const isValidSubscription = async (providerId: string) => {
   return true; // valid subscription
 };
 
+const haveMessageAccess = async (author: string) => {
+  const subscribeData = await SubscriptionPurchase.findOne({
+    author,
+    status: SubscriptionPurchaseStatus.active,
+    endDate: { $gt: new Date() },
+  })
+    .select('access')
+    .sort({ createdAt: -1 });
+
+  if (!subscribeData) return false;
+  const access = subscribeData.access.includes(
+    SubscriptionAccessFeatures.Massaging,
+  );
+  return access;
+};
+
 const SubscriptionPurchasesService = {
   subscriptionPurchase,
   getProviderSubscriptionCurrentPlan,
   isValidSubscription,
+  haveMessageAccess,
 };
 
 export default SubscriptionPurchasesService;
