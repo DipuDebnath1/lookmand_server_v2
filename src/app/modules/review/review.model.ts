@@ -4,10 +4,15 @@ import { IReview } from './review.type';
 const reviewSchema = new Schema<IReview>(
   {
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    providerService: {
+    service: {
       type: Schema.Types.ObjectId,
       required: true,
-      ref: 'ProviderService',
+      ref: 'Service',
+    },
+    booking: {
+      type: Schema.Types.ObjectId,
+      ref: 'ServiceBooking',
+      required: true,
     },
     description: { type: String, required: true },
     rating: { type: Number, required: true },

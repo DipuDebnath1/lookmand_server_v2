@@ -131,6 +131,46 @@ const getAllServices = async (query?: any) => {
       $unwind: '$profileDetails',
     },
 
+    // review average rating calculation
+    {
+      $lookup: {
+        from: 'reviews',
+        let: { serviceId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$service', '$$serviceId'] },
+                  { $eq: ['$isDeleted', false] },
+                ],
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              averageRating: { $avg: '$rating' },
+              totalReviews: { $sum: 1 },
+            },
+          },
+        ],
+        as: 'reviewStats',
+      },
+    },
+    {
+      $unwind: {
+        path: '$reviewStats',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        averageRating: { $ifNull: ['$reviewStats.averageRating', 0] },
+        totalReviews: { $ifNull: ['$reviewStats.totalReviews', 0] },
+      },
+    },
+
     // filter by region and profile completion
     {
       $match: region
@@ -168,7 +208,7 @@ const getAllServices = async (query?: any) => {
         preserveNullAndEmptyArrays: true,
       },
     },
-
+    // only show subscribed users
     {
       $match: {
         $and: [
@@ -194,6 +234,7 @@ const getAllServices = async (query?: any) => {
       },
     },
 
+    // project required fields
     {
       $project: {
         _id: 1,
@@ -211,6 +252,8 @@ const getAllServices = async (query?: any) => {
           image: '$profileDetails.image',
           description: '$profileDetails.description',
           phone: '$profileDetails.phone',
+          averageRating: '$averageRating',
+          totalReviews: '$totalReviews',
         },
         isSponsored: {
           $cond: {
@@ -245,6 +288,8 @@ const getAllServices = async (query?: any) => {
       $group: {
         _id: '$author',
         service: { $first: '$$ROOT' },
+        // $ratingAvg: { $avg: '$averageRating' },
+        // $totalReviews: { $count: '$averageRating' },
       },
     },
     // Reshape the output to match the original structure
@@ -278,6 +323,7 @@ const getSingleService = async (serviceId: string) => {
     {
       $match: matchSubCategory,
     },
+    // Lookup sub-category details
     {
       $lookup: {
         from: 'subcategories',
@@ -289,6 +335,47 @@ const getSingleService = async (serviceId: string) => {
     {
       $unwind: '$subCategoryDetails',
     },
+
+    // review average rating calculation
+    {
+      $lookup: {
+        from: 'reviews',
+        let: { serviceId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$service', '$$serviceId'] },
+                  { $eq: ['$isDeleted', false] },
+                ],
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              averageRating: { $avg: '$rating' },
+              totalReviews: { $sum: 1 },
+            },
+          },
+        ],
+        as: 'reviewStats',
+      },
+    },
+    {
+      $unwind: {
+        path: '$reviewStats',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        averageRating: { $ifNull: ['$reviewStats.averageRating', 0] },
+        totalReviews: { $ifNull: ['$reviewStats.totalReviews', 0] },
+      },
+    },
+    // Lookup author details
     {
       $lookup: {
         from: 'users',
@@ -300,6 +387,7 @@ const getSingleService = async (serviceId: string) => {
     {
       $unwind: '$authorDetails',
     },
+    // Lookup business profile details
     {
       $lookup: {
         from: 'businessprofiles',
@@ -316,6 +404,7 @@ const getSingleService = async (serviceId: string) => {
     {
       $match: { 'profileDetails.isProfileComplete': true },
     },
+    // Lookup subscription purchase for the author
     {
       $lookup: {
         from: 'subscriptionpurchases',
@@ -343,6 +432,7 @@ const getSingleService = async (serviceId: string) => {
         preserveNullAndEmptyArrays: true,
       },
     },
+    // only show subscribed users
     {
       $lookup: {
         from: 'subscriptions',
@@ -380,6 +470,8 @@ const getSingleService = async (serviceId: string) => {
           description: '$profileDetails.description',
           phone: '$profileDetails.phone',
           availability: '$profileDetails.availability',
+          averageRating: '$averageRating',
+          totalReviews: '$totalReviews',
         },
         isSponsored: {
           $cond: {
@@ -404,6 +496,7 @@ const getSingleService = async (serviceId: string) => {
       },
     },
   ];
+
   const result = await ProviderBaseService.aggregate(pipeline);
   if (!result || result.length === 0)
     throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
@@ -600,3 +693,11 @@ const ProviderService = {
 };
 
 export default ProviderService;
+
+// const businessProfileCompletedCheck = async (authorId: string) => {
+//   const profile = await BusinessProfile.findOne({
+//     author: new ObjectId(authorId),
+//   }).select('availability');
+//   console.log(profile);
+// };
+// businessProfileCompletedCheck('692a8ed3b427fc6d87a842c0');

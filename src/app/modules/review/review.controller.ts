@@ -34,10 +34,11 @@ const CreateReview = catchAsync(async (req: Request, res: Response) => {
 
 // update review
 const UpdateReview = catchAsync(async (req: Request, res: Response) => {
+  const { user }: any = req;
   const { id } = req.params;
   if (!ObjectId.isValid(id))
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid review ID');
-  const result = await reviewService.updateReview(id, req.body);
+  const result = await reviewService.updateReview(id, user._id, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
