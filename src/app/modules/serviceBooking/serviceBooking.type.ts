@@ -11,5 +11,5 @@ export interface IServiceBooking extends Document {
   region: keyof typeof Region;
   location: string;
   status: keyof typeof bookingStatuses;
-  isDeleted: boolean;
+  isDeletedBy: Types.ObjectId[];
 }

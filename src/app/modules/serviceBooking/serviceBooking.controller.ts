@@ -150,8 +150,8 @@ const respondToBookingRequest = catchAsync(
     const { bookingId } = req.params;
     const { status } = req.body;
 
-    if (!status)
-      throw new AppError(httpStatus.BAD_REQUEST, 'Status is required');
+    if (!status || Object.keys(bookingStatuses).indexOf(status) === -1)
+      throw new AppError(httpStatus.BAD_REQUEST, 'Invalid status');
 
     let result;
     // validate booking ID
@@ -159,14 +159,14 @@ const respondToBookingRequest = catchAsync(
       throw new AppError(httpStatus.BAD_REQUEST, 'Invalid booking ID');
     // check user role and call appropriate service method
     switch (user.role) {
-      case 'provider':
+      case Roles.PROVIDER:
         result = await serviceBookingService.respondToBookingByProvider(
           bookingId,
           user._id,
           status,
         );
         break;
-      case 'user':
+      case Roles.USER:
         result = await serviceBookingService.respondToBookingByUser(
           bookingId,
           user._id,
@@ -184,8 +184,17 @@ const respondToBookingRequest = catchAsync(
     // send notification to user about booking status update
     const { booking, service } = result;
     const notifiedUserId =
-      user.role === 'provider' ? booking.author : service!.author;
+      user.role === Roles.PROVIDER ? booking.author : service!.author;
 
+    // send response
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      message: 'Booking status updated successfully',
+      success: true,
+      data: {},
+    });
+
+    // send notification
     notificationService.sendNotification(
       {
         user: notifiedUserId,
@@ -194,18 +203,10 @@ const respondToBookingRequest = catchAsync(
         description: `Your booking has been ${status} by the ${user.role}.`,
         service: result!.service as any,
         type: 'serviceBooking',
-        role: 'user',
+        role: Roles.USER,
       },
       { pushNotification: true },
     );
-
-    // send response
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      message: 'Booking status updated successfully',
-      success: true,
-      data: booking,
-    });
   },
 );
 

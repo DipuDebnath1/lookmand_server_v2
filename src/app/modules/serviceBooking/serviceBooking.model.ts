@@ -27,7 +27,7 @@ const serviceBookingSchema = new Schema<IServiceBooking>(
       enum: Object.keys(bookingStatuses),
       default: bookingStatuses.pending,
     },
-    isDeleted: { type: Boolean, default: false },
+    isDeletedBy: { type: [Schema.Types.ObjectId], default: [] },
   },
   {
     timestamps: true,

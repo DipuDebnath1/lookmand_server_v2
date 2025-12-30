@@ -6,7 +6,10 @@ import ServiceBooking from './serviceBooking.model';
 import { IServiceBooking } from './serviceBooking.type';
 import Service from '../service/service.model';
 import { BookingBaseService } from '../../../service';
+import { bookingStatuses } from './const';
 const ObjectId = Types.ObjectId;
+
+const { accepted, pending, cancelled, completed, declined } = bookingStatuses;
 
 // dashboardService.dashboardServiceStatistics();
 
@@ -17,38 +20,91 @@ const bookService = async (payload: IServiceBooking) => {
 
 // get user bookings
 const getUserBookings = async (authorId: string, query: any) => {
-  const filter: any = { author: new ObjectId(authorId), isDeleted: false };
+  const filter: any = {
+    author: new ObjectId(authorId),
+    isDeletedBy: { $ne: new ObjectId(authorId) },
+    status: { $in: [accepted, pending, cancelled] },
+  };
   if (query?.status) filter.status = query.status;
 
-  const select = 'service status createdAt';
-
-  const populate = [
+  const pipeLine: PipelineStage[] = [
+    { $match: filter },
     {
-      path: 'service',
-      select: 'name description image subCategory',
-      populate: [{ path: 'subCategory', select: 'name' }],
+      $lookup: {
+        from: 'services',
+        localField: 'service',
+        foreignField: '_id',
+        as: 'service',
+      },
+    },
+    {
+      $unwind: {
+        path: '$service',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'subcategories',
+        localField: 'service.subCategory',
+        foreignField: '_id',
+        as: 'service.subCategory',
+      },
+    },
+    {
+      $unwind: {
+        path: '$service.subCategory',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'businessprofiles',
+        localField: 'service.author',
+        foreignField: 'author',
+        as: 'service.author',
+      },
+    },
+    {
+      $unwind: {
+        path: '$service.author',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        status: 1,
+        bookingDate: 1,
+        details: 1,
+        location: 1,
+        region: 1,
+        createdAt: 1,
+        service: {
+          _id: '$service._id',
+          name: '$service.name',
+          description: '$service.description',
+          image: '$service.image',
+          subCategory: {
+            _id: '$service.subCategory._id',
+            name: '$service.subCategory.name',
+          },
+          author: {
+            _id: '$service.author._id',
+            name: '$service.author.name',
+            image: '$service.author.image',
+          },
+        },
+      },
     },
   ];
 
-  // const Pipeline: PipelineStage[] = [
-  //   { $match: { author: new ObjectId(authorId), isDeleted: false } },
-  //   {
-  //     $lookup: {
-  //       from: 'services',
-  //       localField: 'service',
-  //       foreignField: '_id',
-  //       as: 'service',
-  //     },
-  //   },
-  // ];
+  const bookings = await BookingBaseService.aggregateWithPagination(
+    pipeLine,
+    query,
+  );
 
-  const bookings = await BookingBaseService.findWithPagination({
-    filters: filter,
-    select,
-    ...query,
-    populate,
-  });
-  return bookings;
+  return { bookings: bookings.data, pagination: bookings.pagination };
 };
 
 // get provider service booking requests
@@ -56,87 +112,82 @@ const getProviderServiceBookingRequests = async (
   providerId: string,
   query: any,
 ) => {
-  const filter: any = {
-    author: new ObjectId(providerId),
-    status: 'approved',
-    isDeleted: false,
-  };
+  const filter: any = {};
+
+  if (query.status) filter.status = query.status;
+  if (!query.status) filter.status = { $in: [pending, accepted] };
 
   const pipeline: PipelineStage[] = [
     { $match: filter },
     {
       $lookup: {
-        from: 'servicebookings',
-        localField: '_id',
-        foreignField: 'service',
-        as: 'bookings',
+        from: 'services',
+        localField: 'service',
+        foreignField: '_id',
+        as: 'service',
       },
     },
     {
       $unwind: {
-        path: '$bookings',
+        path: '$service',
         preserveNullAndEmptyArrays: true,
       },
     },
-  ];
-
-  // filter by booking status
-  if (query?.status) {
-    pipeline.push({
-      $match: { 'bookings.status': query.status },
-    });
-  }
-
-  // lookup user details
-  pipeline.push(
+    {
+      $match: { 'service.author': new ObjectId(providerId) },
+    },
     {
       $lookup: {
         from: 'users',
-        localField: 'bookings.author',
+        localField: 'author',
         foreignField: '_id',
-        as: 'bookedAuthor',
+        as: 'author',
       },
     },
     {
       $unwind: {
-        path: '$bookedAuthor',
+        path: '$author',
         preserveNullAndEmptyArrays: true,
       },
     },
     {
       $lookup: {
         from: 'subcategories',
-        localField: 'subCategory',
+        localField: 'service.subCategory',
         foreignField: '_id',
-        as: 'category',
+        as: 'subcategory',
       },
     },
     {
       $unwind: {
-        path: '$category',
+        path: '$subcategory',
         preserveNullAndEmptyArrays: true,
       },
     },
-  );
-
-  // grouping data
-  pipeline.push({
-    $project: {
-      _id: '$bookings._id',
-      author: {
-        name: '$bookedAuthor.name',
-        image: '$bookedAuthor.image',
-      },
-      description: '$bookings.description',
-      location: '$bookings.location',
-      bookingDate: '$bookings.bookingDate',
-      status: '$bookings.status',
-      category: {
-        _id: '$category._id',
-        name: '$category.name',
+    {
+      $project: {
+        _id: 1,
+        author: {
+          _id: '$author._id',
+          name: '$author.name',
+          image: '$author.image',
+          phone: '$author.phone',
+          email: '$author.email',
+        },
+        status: 1,
+        bookingDate: 1,
+        details: 1,
+        location: 1,
+        region: 1,
+        createdAt: 1,
+        subcategory: {
+          _id: '$subcategory._id',
+          name: '$subcategory.name',
+        },
       },
     },
-  });
+  ];
+
   const res = await BookingBaseService.aggregateWithPagination(pipeline, query);
   return res;
 };
@@ -148,25 +199,24 @@ const respondToBookingByProvider = async (
   status: 'accepted' | 'declined' | 'completed' | 'cancelled',
 ) => {
   // validate status
-  if (!['accepted', 'declined', 'completed', 'cancelled'].includes(status))
+  if (![accepted, declined, completed, cancelled].includes(status))
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid status');
 
   // validate booking ID
   const booking = await ServiceBooking.findById(bookingId);
-  if (!booking || booking.isDeleted)
-    throw new AppError(httpStatus.NOT_FOUND, 'Booking not found');
+  if (!booking) throw new AppError(httpStatus.NOT_FOUND, 'Booking not found');
 
   // booking must be pending to accept or decline
   if (
-    booking.status !== 'pending' &&
-    (status === 'accepted' || status === 'declined')
+    booking.status !== pending &&
+    (status === accepted || status === declined)
   )
     throw new AppError(httpStatus.BAD_REQUEST, 'Booking is not pending');
 
   /// booking must be accepted to complete
   if (
-    (status === 'completed' || status === 'cancelled') &&
-    booking.status !== 'accepted'
+    (status === completed || status === cancelled) &&
+    booking.status !== accepted
   )
     throw new AppError(
       httpStatus.BAD_REQUEST,
@@ -182,8 +232,6 @@ const respondToBookingByProvider = async (
       httpStatus.FORBIDDEN,
       'Not authorized to respond to this booking',
     );
-  if (service.isDeleted)
-    throw new AppError(httpStatus.NOT_FOUND, 'Service is no longer available');
 
   // update booking status
   booking.status = status;
@@ -199,18 +247,17 @@ const respondToBookingByUser = async (
   status: 'cancelled' | 'completed',
 ) => {
   // validate status
-  if (!['cancelled', 'completed'].includes(status))
+  if (![cancelled, completed].includes(status))
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid status');
 
   // validate booking ID
   const booking = await ServiceBooking.findOne({
     _id: new ObjectId(bookingId),
-    isDeleted: false,
     author: new ObjectId(userId),
   });
   if (!booking) throw new AppError(httpStatus.NOT_FOUND, 'Booking not found');
 
-  if (booking.status === 'completed' || booking.status === 'cancelled')
+  if (booking.status === completed || booking.status === cancelled)
     throw new AppError(httpStatus.BAD_REQUEST, 'Booking is already closed');
 
   // booking status update
@@ -226,19 +273,21 @@ const respondToBookingByUser = async (
 const deleteBooking = async (bookingId: string, userId: string) => {
   const booking = await ServiceBooking.findOne({
     _id: new ObjectId(bookingId),
-    isDeleted: false,
     author: new ObjectId(userId),
-  });
+    isDeletedBy: { $ne: new ObjectId(userId) },
+  }).select('status');
   if (!booking) throw new AppError(httpStatus.NOT_FOUND, 'Booking not found');
 
-  if (booking.status !== 'pending')
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'you can only delete pending bookings',
-    );
+  const deletableStatuses = [pending, cancelled, completed] as const;
+  if (
+    deletableStatuses.includes(
+      booking!.status as (typeof deletableStatuses)[number],
+    )
+  )
+    throw new AppError(httpStatus.BAD_REQUEST, 'Only history can be deleted');
 
   // soft delete booking
-  booking.isDeleted = true;
+  booking.isDeletedBy.push(new ObjectId(userId));
   await booking.save();
   return booking;
 };
