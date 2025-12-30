@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
 import AppError from '../../ErrorHandler/AppError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-import conversationService from './conversation.service';
-import { Types } from 'mongoose';
-import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
+import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
 import { Roles } from '../user/const';
+import conversationService from './conversation.service';
+import { SubscriptionAccessFeatures } from '../subscription/const';
 const { ObjectId } = Types;
 
 // create a new conversation
@@ -22,7 +23,10 @@ const CreateConversation = catchAsync(async (req, res) => {
   // if provider, check subscription
   if (
     user.role === Roles.PROVIDER &&
-    !(await SubscriptionPurchasesService.haveMessageAccess(userId))
+    !(await SubscriptionPurchasesService.checkAccess(
+      userId,
+      SubscriptionAccessFeatures.Massaging,
+    ))
   )
     throw new AppError(
       httpStatus.FORBIDDEN,
@@ -85,7 +89,10 @@ const SendMessageInConversation = catchAsync(async (req, res) => {
   // if provider, check subscription
   if (
     user.role === Roles.PROVIDER &&
-    !(await SubscriptionPurchasesService.haveMessageAccess(userId))
+    !(await SubscriptionPurchasesService.checkAccess(
+      userId,
+      SubscriptionAccessFeatures.Massaging,
+    ))
   )
     throw new AppError(
       httpStatus.FORBIDDEN,

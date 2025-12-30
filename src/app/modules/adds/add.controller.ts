@@ -6,16 +6,29 @@ import httpStatus from 'http-status';
 import sendResponse from '../../utils/sendResponse';
 import addService from './add.service';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
+import { SubscriptionAccessFeatures } from '../subscription/const';
+import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
 
 // create add
 const CreateAdds = catchAsync(async (req: Request, res: Response) => {
   const { user }: any = req;
   const payload = req.body;
 
-  const image = req.file;
-  if (!image)
+  const content = req.file;
+  if (!content)
     throw new AppError(httpStatus.BAD_REQUEST, 'Image file is required');
-  payload.image = ImageUrl(image);
+  payload.content = ImageUrl(content);
+
+  // check access
+  if (!user?.isAddProvider)
+    throw new AppError(httpStatus.FORBIDDEN, 'You are not an add provider');
+  if (
+    !(await SubscriptionPurchasesService.checkAccess(
+      user._id,
+      SubscriptionAccessFeatures.Adds,
+    ))
+  )
+    throw new AppError(httpStatus.FORBIDDEN, 'You are not an add provider');
 
   const result = await addService.createAdd({
     ...payload,
@@ -33,11 +46,11 @@ const CreateAdds = catchAsync(async (req: Request, res: Response) => {
 // self adds
 const getSelfAdds = catchAsync(async (req: Request, res: Response) => {
   const { user }: any = req;
-  const adds = await addService.getSelfAdds(user._id, req.query);
+  const adds = await addService.getSelfAdd(user._id);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Adds retrieved successfully',
+    message: 'Add retrieved successfully',
     data: adds,
   });
 });

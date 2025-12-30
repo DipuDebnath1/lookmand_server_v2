@@ -63,18 +63,6 @@ class NotificationService {
         path: 'sender',
         select: 'name image',
       },
-      {
-        path: 'service',
-        select: 'name image',
-      },
-      {
-        path: 'serviceRRequest',
-        select: 'title description status',
-        populate: {
-          path: 'service',
-          select: 'name image',
-        },
-      },
     ];
 
     // base filters

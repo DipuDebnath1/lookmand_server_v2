@@ -8,7 +8,6 @@ export interface INotification extends Document {
   title: string;
   description: string;
   service: Types.ObjectId;
-  serviceRRequest: Types.ObjectId;
   type: keyof typeof notificationTypes;
   role: TRoles;
   isViewed: boolean;

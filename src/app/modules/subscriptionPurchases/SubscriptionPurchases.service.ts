@@ -1,17 +1,17 @@
 import httpStatus from 'http-status';
-import AppError from '../../ErrorHandler/AppError';
-import SubscriptionPurchase from './SubscriptionPurchases.model';
-import calculateEndDate from '../../utils/calculateEndDate';
-import Subscription from '../subscription/subscription.model';
 import { setAgendaSchedule } from '../../../agenda/AgendaJobDefine';
-import { ISubscriptionPurchasePopulated } from './subscriptionPurchases.type';
+import { AgendaJobNames } from '../../../agenda/const';
+import AppError from '../../ErrorHandler/AppError';
+import calculateEndDate from '../../utils/calculateEndDate';
 import {
   SubscriptionAccessFeatures,
   SubscriptionDirectPurchasePermission,
   SubscriptionPackageName,
 } from '../subscription/const';
+import Subscription from '../subscription/subscription.model';
 import { SubscriptionPurchaseStatus } from './const';
-import { AgendaJobNames } from '../../../agenda/const';
+import SubscriptionPurchase from './SubscriptionPurchases.model';
+import { ISubscriptionPurchasePopulated } from './subscriptionPurchases.type';
 
 // Main function to create a subscription purchase
 const subscriptionPurchase = async (
@@ -107,7 +107,10 @@ const isValidSubscription = async (providerId: string) => {
   return true; // valid subscription
 };
 
-const haveMessageAccess = async (author: string) => {
+const checkAccess = async (
+  author: string,
+  feature: keyof typeof SubscriptionAccessFeatures,
+) => {
   const subscribeData = await SubscriptionPurchase.findOne({
     author,
     status: SubscriptionPurchaseStatus.active,
@@ -117,9 +120,7 @@ const haveMessageAccess = async (author: string) => {
     .sort({ createdAt: -1 });
 
   if (!subscribeData) return false;
-  const access = subscribeData.access.includes(
-    SubscriptionAccessFeatures.Massaging,
-  );
+  const access = subscribeData.access.includes(feature);
   return access;
 };
 
@@ -127,7 +128,7 @@ const SubscriptionPurchasesService = {
   subscriptionPurchase,
   getProviderSubscriptionCurrentPlan,
   isValidSubscription,
-  haveMessageAccess,
+  checkAccess,
 };
 
 export default SubscriptionPurchasesService;

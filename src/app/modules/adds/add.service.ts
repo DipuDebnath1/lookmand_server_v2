@@ -1,78 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import httpStatus from 'http-status';
 import { PipelineStage, Types } from 'mongoose';
-import AppError from '../../ErrorHandler/AppError';
 import Adds from './add.model';
 import { IAdds } from './add.type';
+import BaseService from '../../../service/DBService';
 import SubscriptionPurchase from '../subscriptionPurchases/SubscriptionPurchases.model';
-import config from '../../../config';
-import { AddsBaseService } from '../../../service';
+import { SubscriptionPurchaseStatus } from '../subscriptionPurchases/const';
+import { SubscriptionAccessFeatures } from '../subscription/const';
+
+const SubscriptionPurchasesBaseService = new BaseService(SubscriptionPurchase);
+const AddsBaseServiceBaseService = new BaseService(Adds);
 
 // create add
 const createAdd = async (payload: IAdds) => {
-  let maxAAllowedAdds = 0; // Set to 0 to disable limit for now
-  // check active subscription
-  const userPurchasedSubscription: any = await SubscriptionPurchase.findOne({
-    author: payload.author,
-    status: 'active',
-    endDate: { $gt: new Date() },
-    title: { $ne: 'Basic' },
-  }).populate([
-    {
-      path: 'subscription',
-      select: 'title',
-    },
-  ]);
-
-  if (!userPurchasedSubscription)
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      'only subscribed users can create adds.',
-    );
-
-  // determine max active adds based on subscription type
-  switch (userPurchasedSubscription.subscription.title) {
-    case 'Basic':
-      maxAAllowedAdds = config.providerAddCreateLimit.basic || 0;
-      break;
-    case 'Standard':
-      maxAAllowedAdds = config.providerAddCreateLimit.standard || 0;
-      break;
-    case 'Premium':
-      maxAAllowedAdds = config.providerAddCreateLimit.premium || 0;
-      break;
-    default:
-      maxAAllowedAdds = 0;
-      break;
-  }
-
-  // count existing adds
-  const isExistAdds = await Adds.countDocuments({
+  // check exist add
+  const existAdd = await Adds.findOne({
     author: payload.author,
     isDeleted: false,
   });
+  if (existAdd) throw new Error('You have already created an add!');
 
-  if (maxAAllowedAdds === 0)
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      `your current subscription plan does not allow creating adds.`,
-    );
-
-  if (maxAAllowedAdds <= isExistAdds)
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      `sorry your add limit has been reached.`,
-    );
-  return Adds.create({ ...payload });
+  return Adds.create(payload);
 };
 
 // self Adds
-const getSelfAdds = async (authorId: Types.ObjectId, query?: any) => {
+const getSelfAdd = async (authorId: Types.ObjectId) => {
   const filter = { author: authorId, isDeleted: false };
-  const adds = await AddsBaseService.findWithPagination({
+  const adds = await AddsBaseServiceBaseService.findOne({
     filters: filter,
-    ...query,
-    select: 'title image description createdAt',
+    select: 'author image createdAt',
   });
   return adds;
 };
@@ -81,7 +36,11 @@ const getSelfAdds = async (authorId: Types.ObjectId, query?: any) => {
 const getAllAdds = async (location: string, query: any) => {
   const pipeLine: PipelineStage[] = [
     {
-      $match: { isDeleted: false },
+      $match: {
+        status: SubscriptionPurchaseStatus.active,
+        endDate: { $gt: new Date() },
+        access: { $in: SubscriptionAccessFeatures.Adds },
+      },
     },
     {
       $lookup: {
@@ -89,55 +48,38 @@ const getAllAdds = async (location: string, query: any) => {
         localField: 'author',
         foreignField: 'author',
         as: 'profile',
+        pipeline: [
+          { $match: { isDeleted: false } },
+          {
+            $project: {
+              location: 1,
+            },
+          },
+        ],
       },
     },
-    {
-      $unwind: '$profile',
-    },
-  ];
-
-  // filter by location if provided
-  if (location) {
-    pipeLine.push({
-      $match: { 'profile.location': location }, // filter by user location
-    });
-  }
-
-  // additional stages to ensure only subscribed providers' adds are fetched
-  const moreStage = [
+    { $unwind: '$profile' },
+    { $match: { 'profile.location': location } },
     {
       $lookup: {
-        from: 'subscriptionpurchases',
+        from: 'adds',
         localField: 'author',
         foreignField: 'author',
-        as: 'subscriptionInfo',
+        as: 'addDetails',
       },
     },
-    {
-      $unwind: {
-        path: '$subscriptionInfo',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $match: {
-        'subscriptionInfo.title': { $ne: 'Basic' }, // exclude basic plan providers
-        'subscriptionInfo.status': { $eq: 'active' }, // only active subscriptions
-      },
-    },
+    { $unwind: '$addDetails' },
     {
       $project: {
-        author: 1,
-        profile: '$profile._id',
-        title: 1,
-        image: 1,
-        description: 1,
+        _id: '$addDetails._id',
+        profileId: '$profile._id',
+        content: '$addDetails.content',
       },
     },
   ];
 
-  const adds = await AddsBaseService.aggregateWithPagination(
-    [...pipeLine, ...moreStage],
+  const adds = await SubscriptionPurchasesBaseService.aggregateWithPagination(
+    [...pipeLine],
     query,
   );
 
@@ -146,7 +88,7 @@ const getAllAdds = async (location: string, query: any) => {
 
 const addService = {
   createAdd,
-  getSelfAdds,
+  getSelfAdd,
   getAllAdds,
 };
 

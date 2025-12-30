@@ -12,12 +12,7 @@ const notificationSchema = new Schema<INotification>(
     role: { type: String, enum: roles, required: false },
     service: {
       type: Schema.Types.ObjectId,
-      ref: 'ProviderService',
-      required: false,
-    },
-    serviceRRequest: {
-      type: Schema.Types.ObjectId,
-      ref: 'ServiceRequest',
+      ref: 'Service',
       required: false,
     },
     type: {

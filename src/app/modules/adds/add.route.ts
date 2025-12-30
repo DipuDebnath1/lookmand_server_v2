@@ -1,8 +1,6 @@
 import express from 'express';
 import auth from '../../../middleware/auth';
-import validationRequest from '../../utils/validationRequest';
 import AddsController from './add.controller';
-import { createAddValidation } from './add.validation';
 import fileUploader from '../../../middleware/fileUpload/fileUploader';
 import { Roles } from '../user/const';
 
@@ -13,8 +11,7 @@ const router = express.Router();
 router.post(
   '/create',
   auth(Roles.PROVIDER),
-  fileUploaderMiddleware.single('image'),
-  validationRequest(createAddValidation),
+  fileUploaderMiddleware.single('content'),
   AddsController.CreateAdds,
 );
 
