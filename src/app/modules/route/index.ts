@@ -16,6 +16,7 @@ import dashboardRoute from '../dashboard/dashboard.route';
 import SettingRoute from '../setting/setting.route';
 import ReportRoute from '../report/report.route';
 import AddsRoute from '../adds/add.route';
+import ServiceInquiryRoute from '../serviceInquiry/serviceInquiry.route';
 
 const moduleRoute = [
   {
@@ -81,6 +82,10 @@ const moduleRoute = [
   {
     path: '/adds',
     route: AddsRoute,
+  },
+  {
+    path: '/service-inquiry',
+    route: ServiceInquiryRoute,
   },
 ];
 
