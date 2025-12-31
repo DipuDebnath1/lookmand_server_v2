@@ -8,6 +8,7 @@ import addService from './add.service';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
 import { SubscriptionAccessFeatures } from '../subscription/const';
 import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
+import { Roles } from '../user/const';
 
 // create add
 const CreateAdds = catchAsync(async (req: Request, res: Response) => {
@@ -20,7 +21,7 @@ const CreateAdds = catchAsync(async (req: Request, res: Response) => {
   payload.content = ImageUrl(content);
 
   // check access
-  if (!user?.isAddProvider)
+  if (user?.role !== Roles.PROVIDER)
     throw new AppError(httpStatus.FORBIDDEN, 'You are not an add provider');
   if (
     !(await SubscriptionPurchasesService.checkAccess(
@@ -57,9 +58,8 @@ const getSelfAdds = catchAsync(async (req: Request, res: Response) => {
 
 // add provider adds
 const getAllAdds = catchAsync(async (req: Request, res: Response) => {
-  const { user }: any = req;
-  const location = user?.location;
-  const adds = await addService.getAllAdds(location, req.query);
+  const query = req.query;
+  const adds = await addService.getAllAdds(query as any);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

@@ -694,10 +694,30 @@ const ProviderService = {
 
 export default ProviderService;
 
-// const businessProfileCompletedCheck = async (authorId: string) => {
+// const createServices = async (authorId: string) => {
 //   const profile = await BusinessProfile.findOne({
 //     author: new ObjectId(authorId),
-//   }).select('availability');
-//   console.log(profile);
+//   }).select('serviceCategory');
+
+//   const subcategory = await SubCategoryBaseService.findMany({
+//     filters: { category: profile?.serviceCategory, isDeleted: false },
+//     select: '_id',
+//   });
+
+//   for (const service of subcategory) {
+//     const isExist = await Service.findOne({
+//       author: new ObjectId(authorId),
+//       subCategory: service._id,
+//       isDeleted: false,
+//     });
+
+//     if (isExist) continue;
+//     const newService = await Service.create({
+//       author: new ObjectId(authorId),
+//       subCategory: service._id,
+//     });
+
+//     console.log(newService);
+//   }
 // };
-// businessProfileCompletedCheck('692a8ed3b427fc6d87a842c0');
+// createServices('6954afde08f8f1212842bcb5');
