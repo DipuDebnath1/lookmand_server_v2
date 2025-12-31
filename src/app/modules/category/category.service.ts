@@ -67,7 +67,7 @@ class CategoryServices {
 
     const categories = await CategoryBaseService.findMany({
       //   select: 'name description image',
-      select: query.select || 'name description image',
+      select: query.select || 'name description image bannerImage',
       filters: filter,
       ...query,
     });

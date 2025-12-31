@@ -14,6 +14,7 @@ import SubscriptionPurchase from '../app/modules/subscriptionPurchases/Subscript
 import Transaction from '../app/modules/transaction/transaction.model';
 import Review from '../app/modules/review/review.model';
 import Service from '../app/modules/service/service.model';
+import ServiceInquiry from '../app/modules/serviceInquiry/serviceInquiry.model';
 
 const UserBaseService = new BaseService(User);
 const ProfileBaseService = new BaseService(BusinessProfile);
@@ -32,6 +33,7 @@ const SubscriptionBaseService = new BaseService(Subscription);
 const SubscriptionPurchaseBaseService = new BaseService(SubscriptionPurchase);
 const TransactionBaseService = new BaseService(Transaction);
 const ReviewBaseService = new BaseService(Review);
+const ServiceInquiryBaseService = new BaseService(ServiceInquiry);
 
 export {
   ProviderBaseService,
@@ -50,4 +52,5 @@ export {
   SubscriptionPurchaseBaseService,
   TransactionBaseService,
   ReviewBaseService,
+  ServiceInquiryBaseService,
 };

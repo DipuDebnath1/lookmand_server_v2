@@ -1,5 +1,17 @@
 export const ServiceInquiryStatuses = {
-  respond: 'respond',
   active: 'active',
+  respond: 'respond',
   closed: 'closed',
 } as const;
+
+export const ServiceInquiryPopulate = {
+  fields: 'author subCategory region status additionalInfo date',
+  author: {
+    path: 'author',
+    select: 'name email phone email image',
+  },
+  subCategory: {
+    path: 'subCategory',
+    select: 'name category',
+  },
+};

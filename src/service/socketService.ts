@@ -8,6 +8,9 @@ import {
   IConversation,
   IMessage,
 } from '../app/modules/conversation/conversation.type';
+import SubscriptionPurchase from '../app/modules/subscriptionPurchases/SubscriptionPurchases.model';
+import { SubscriptionAccessFeatures } from '../app/modules/subscription/const';
+import { SubscriptionPurchaseStatus } from '../app/modules/subscriptionPurchases/const';
 
 const { ObjectId } = Types;
 
@@ -161,6 +164,60 @@ const sendConversationDataToUserWithSocketId = (
   }
 };
 
+// post enquiry notification send to all relevant providers
+const notifyNewServiceInquiryToProviders = async (
+  serviceCategory: string,
+  payload: any,
+) => {
+  try {
+    // filter for active subscriptions with inquiry access
+    const filter = {
+      access: { $in: [SubscriptionAccessFeatures.PostInquiry] },
+      status: SubscriptionPurchaseStatus.active,
+      endDate: { $gt: new Date() },
+    };
+
+    // relevant service providers
+    const relevantProviders = await SubscriptionPurchase.aggregate([
+      { $match: filter },
+      {
+        $lookup: {
+          from: 'businessprofiles',
+          localField: 'author',
+          foreignField: 'author',
+          as: 'profileDetails',
+          pipeline: [
+            { $match: { serviceCategory: new ObjectId(serviceCategory) } },
+          ],
+        },
+      },
+      { $unwind: '$profileDetails' },
+      {
+        $project: {
+          _id: '$author',
+          name: '$profileDetails.businessName',
+          category: '$profileDetails.serviceCategories',
+        },
+      },
+    ]);
+
+    // send payload to relevant providers
+    relevantProviders.forEach((provider) => {
+      const onlineUsersSocketId = onlineUsers.get(provider._id.toString());
+      if (onlineUsersSocketId) {
+        io.to(onlineUsersSocketId).emit(
+          SocketRoomId.NewBookingRequest,
+          payload,
+        );
+      }
+    });
+  } catch (error) {
+    logger.error(
+      `socket notifyNewServiceInquiryToProviders failed Unexpected error: ${JSON.stringify(error)}`,
+    );
+  }
+};
+
 // export socket service
 const SocketService = {
   sendDataToUserWithSocketId,
@@ -170,6 +227,7 @@ const SocketService = {
   sendUnreadNotificationCount,
   sendNotificationBySocket,
   sendConversationDataToUserWithSocketId,
+  notifyNewServiceInquiryToProviders,
 };
 
 export default SocketService;

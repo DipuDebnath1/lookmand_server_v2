@@ -141,7 +141,7 @@ const getAllAdds = async (query: {
     },
   ];
 
-  const data = await SubscriptionPurchasesBaseService.aggregateWithPagination(
+  const result = await SubscriptionPurchasesBaseService.aggregateWithPagination(
     dataPipeline,
     {
       page: randomPage,
@@ -149,7 +149,7 @@ const getAllAdds = async (query: {
     },
   );
 
-  return data;
+  return result.data;
 };
 
 const addService = {

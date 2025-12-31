@@ -22,10 +22,10 @@ export const SubscriptionAccessFeatures = {
   Massaging: 'Massaging',
   Call: 'Call',
   Email: 'Email',
-  Quote: 'Quote',
   Adds: 'Adds',
   AddFavorites: 'AddFavorites',
   Reviews: 'Reviews',
   OpeningHours: 'OpeningHours',
   ServiceBooking: 'ServiceBooking',
+  PostInquiry: 'PostInquiry',
 } as const;
