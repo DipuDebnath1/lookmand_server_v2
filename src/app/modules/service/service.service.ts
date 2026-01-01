@@ -252,9 +252,9 @@ const getAllServices = async (query?: any) => {
           image: '$profileDetails.image',
           description: '$profileDetails.description',
           phone: '$profileDetails.phone',
-          averageRating: '$averageRating',
-          totalReviews: '$totalReviews',
         },
+        averageRating: '$averageRating',
+        totalReviews: '$totalReviews',
         isSponsored: {
           $cond: {
             if: {
@@ -288,8 +288,6 @@ const getAllServices = async (query?: any) => {
       $group: {
         _id: '$author',
         service: { $first: '$$ROOT' },
-        // $ratingAvg: { $avg: '$averageRating' },
-        // $totalReviews: { $count: '$averageRating' },
       },
     },
     // Reshape the output to match the original structure
