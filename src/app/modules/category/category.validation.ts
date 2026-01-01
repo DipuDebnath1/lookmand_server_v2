@@ -23,12 +23,6 @@ export const categoryUpdateValidation = z.object({
         })
         .min(3, 'Category name must be at least 3 characters long')
         .optional(),
-      description: z
-        .string({
-          required_error: 'Category description is required',
-        })
-        .min(5, 'Category description must be at least 5 characters long')
-        .optional(),
     })
     .strict(),
 });

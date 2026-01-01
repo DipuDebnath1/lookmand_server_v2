@@ -23,7 +23,7 @@ router.get(
 router.get(
   '/',
   auth(Roles.PROVIDER),
-  ServiceInquiryController.UserSelfServiceInquiries,
+  ServiceInquiryController.AllServiceInquiries,
 );
 router.post(
   '/:inquiryId/accept',

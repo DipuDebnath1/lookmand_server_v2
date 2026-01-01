@@ -4,7 +4,7 @@ export const SocketRoomId = {
   Notification: 'Notification',
   UnreadNotificationCount: 'UnreadNotificationCount',
   OnlineUsers: 'OnlineUsers',
-  NewBookingRequest: 'NewServiceInquiry',
-  RemoveBookingRequest: 'RemoveServiceInquiry',
+  NewServiceInquiry: 'NewServiceInquiry',
+  ServiceInquiryStatusUpdate: 'ServiceInquiryStatusUpdate',
   OrderStatusUpdate: 'OrderStatusUpdate',
 } as const;

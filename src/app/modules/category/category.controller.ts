@@ -64,7 +64,21 @@ export const CategoryController = {
   // Update category
   updateCategory: catchAsync(async (req: Request, res: Response) => {
     const { categoryId } = req.params;
-    if (req.file) req.body.image = ImageUrl(req.file);
+    // Validate required image files
+    const files = req?.files as { [fieldname: string]: Express.Multer.File[] };
+
+    if (!files || !files.image || files.image.length < 1)
+      req.body.image = ImageUrl(files.image[0]);
+
+    // Banner image is optional
+    if (files && 'bannerImage' in files && files.bannerImage.length > 0)
+      req.body.bannerImage = ImageUrl(files.bannerImage[0]);
+
+    if (Object.keys(req.body).length === 0)
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'At least one field is required to update',
+      );
 
     const updatedCategory = await CategoryService.updateCategory(
       categoryId,
@@ -150,6 +164,12 @@ export const CategoryController = {
     const { subCategoryId } = req.params;
 
     if (req.file) req.body.image = ImageUrl(req.file);
+
+    if (Object.keys(req.body).length === 0)
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'At least one field is required to update',
+      );
 
     const updatedSubCategory = await SubCategoryService.updateSubCategory(
       subCategoryId,

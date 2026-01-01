@@ -11,6 +11,10 @@ import sendResponse from '../../utils/sendResponse';
 import SocketService from '../../../service/socketService';
 import { ServiceInquiryPopulate, ServiceInquiryStatuses } from './const';
 import serviceInquiryService from './serviceInquiry.service';
+import ServiceInquiry from './serviceInquiry.model';
+import { Types } from 'mongoose';
+
+const ObjectId = Types.ObjectId;
 
 // add new service inquiry
 const AddNewServiceInquiry = catchAsync(async (req: Request, res: Response) => {
@@ -28,21 +32,40 @@ const AddNewServiceInquiry = catchAsync(async (req: Request, res: Response) => {
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid sub-category ID');
 
   // Validate category-subcategory relationship
-  if (subCategory.category.toString() !== serviceInquiryData.categoryId)
+  if (subCategory.category.toString() !== serviceInquiryData.category)
     throw new AppError(
       httpStatus.BAD_REQUEST,
       'Sub-category does not belong to the specified category',
     );
   //check valid date
   const inquiryDate = new Date(serviceInquiryData.date);
-  if (inquiryDate > new Date())
+  if (inquiryDate < new Date())
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid inquiry date');
+
+  // check already have inquiry for same date
+  const existingInquiry = await ServiceInquiry.exists({
+    author: user?._id,
+    date: {
+      $lte: new Date(inquiryDate.getTime() + 24 * 60 * 60 * 1000),
+      $gte: inquiryDate,
+    },
+    subCategory: new ObjectId(serviceInquiryData.subCategory),
+    status: ServiceInquiryStatuses.active,
+    isDeleted: false,
+  });
+
+  if (existingInquiry)
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'the inquiry already exists for this date',
+    );
 
   const newServiceInquiry = await ServiceInquiryBaseService.create({
     ...serviceInquiryData,
     author: user?._id,
   });
 
+  // send response
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -56,7 +79,7 @@ const AddNewServiceInquiry = catchAsync(async (req: Request, res: Response) => {
   ]);
   // Notify relevant parties about the new service inquiry with socket
   SocketService.notifyNewServiceInquiryToProviders(
-    serviceInquiryData.categoryId,
+    serviceInquiryData.category,
     populateService,
   );
 });

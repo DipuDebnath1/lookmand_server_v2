@@ -1,16 +1,26 @@
-import { PipelineStage } from 'mongoose';
+import httpStatus from 'http-status';
+import { PipelineStage, Types } from 'mongoose';
+import { UserBaseService } from '../../../service';
+import AppError from '../../ErrorHandler/AppError';
 import BusinessProfile from './businessProfile.model';
 import { IBusinessProfile } from './businessProfile.type';
-import { Types } from 'mongoose';
-import AppError from '../../ErrorHandler/AppError';
-import httpStatus from 'http-status';
-import { UserBaseService } from '../../../service';
+import SubscriptionPurchase from '../subscriptionPurchases/SubscriptionPurchases.model';
+import { SubscriptionPurchaseStatus } from '../subscriptionPurchases/const';
 const { ObjectId } = Types;
 
 class BusinessProfileService {
   // Find or create a business profile for the user
-  async findOrCreateProfile(authorId: string): Promise<IBusinessProfile> {
+  async findOrCreateProfile(authorId: string) {
     let profile = await BusinessProfile.findOne({ author: authorId });
+
+    const subscribeInfo = await SubscriptionPurchase.findOne({
+      author: authorId,
+      status: SubscriptionPurchaseStatus.active,
+      endDate: { $gt: new Date() },
+    })
+      .sort({ createdAt: -1 })
+      .select('access');
+
     if (!profile) {
       const findUser = await UserBaseService.findById(authorId, {
         select: 'role',
@@ -24,7 +34,11 @@ class BusinessProfileService {
         author: authorId,
       });
     }
-    return profile;
+    return {
+      ...profile.toObject(),
+      isSubscribed: !!subscribeInfo,
+      subscriptionAccess: subscribeInfo?.access || [],
+    };
   }
 
   // Update business profile
@@ -32,7 +46,12 @@ class BusinessProfileService {
     authorId: string,
     updates: Partial<IBusinessProfile>,
   ): Promise<IBusinessProfile> {
-    const profile = await this.findOrCreateProfile(authorId);
+    const profile = await BusinessProfile.findOne({
+      author: new ObjectId(authorId),
+    });
+
+    if (!profile)
+      throw new AppError(httpStatus.NOT_FOUND, 'Business profile not found');
 
     // Prevent changing serviceCategory if already set
     if (profile.serviceCategory && updates.serviceCategory)

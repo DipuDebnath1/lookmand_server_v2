@@ -15,6 +15,7 @@ import { IServiceBooking } from '../serviceBooking/serviceBooking.type';
 import mongoose, { Types } from 'mongoose';
 import { Region } from '../user/const';
 import SocketService from '../../../service/socketService';
+import { SocketRoomId } from '../../../service/const';
 
 // all service inquiries for subscribed providers
 const AllServiceInquiries = async (providerId: string, query: any) => {
@@ -81,7 +82,7 @@ const acceptedPostInquiry = async (
       postInquiryId,
       {
         select:
-          '_id status isDeleted category subCategory region date additionInfo',
+          '_id status author isDeleted category subCategory region date additionalInfo location',
       },
     );
     if (!serviceInquiry || serviceInquiry.isDeleted)
@@ -96,6 +97,7 @@ const acceptedPostInquiry = async (
     //   check have provider this service
     const providerService = await ProviderBaseService.findOne({
       filters: {
+        author: providerId,
         subCategory: serviceInquiry.subCategory,
         isDeleted: false,
       },
@@ -133,6 +135,13 @@ const acceptedPostInquiry = async (
       serviceInquiry.category.toString(),
       serviceInquiry,
     );
+
+    // update service inquiry status notification to user with socket
+    SocketService.sendDataToUserWithSocketId({
+      userId: serviceInquiry.author.toString(),
+      data: serviceInquiry,
+      roomId: SocketRoomId.ServiceInquiryStatusUpdate,
+    });
 
     return bookingResponse;
   } catch (error: any) {

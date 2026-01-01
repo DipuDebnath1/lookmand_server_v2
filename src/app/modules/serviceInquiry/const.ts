@@ -5,7 +5,7 @@ export const ServiceInquiryStatuses = {
 } as const;
 
 export const ServiceInquiryPopulate = {
-  fields: 'author subCategory region status additionalInfo date',
+  fields: 'author subCategory region status additionalInfo date createdAt',
   author: {
     path: 'author',
     select: 'name email phone email image',

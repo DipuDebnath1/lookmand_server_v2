@@ -39,7 +39,7 @@ const sendDataToUserWithSocketId = (payload: TSendDataToUserWithSocketId) => {
     io.to(onlineUsersSocketId).emit(payload.roomId, payload.data);
   } catch (error) {
     logger.error(
-      `socket message sending failed Unexpected error: ${JSON.stringify(error)}`,
+      `socket message sending failed Unexpected error room:${payload.roomId}  message: ${JSON.stringify(error)}`,
     );
   }
 };
@@ -206,7 +206,7 @@ const notifyNewServiceInquiryToProviders = async (
       const onlineUsersSocketId = onlineUsers.get(provider._id.toString());
       if (onlineUsersSocketId) {
         io.to(onlineUsersSocketId).emit(
-          SocketRoomId.NewBookingRequest,
+          SocketRoomId.NewServiceInquiry,
           payload,
         );
       }
