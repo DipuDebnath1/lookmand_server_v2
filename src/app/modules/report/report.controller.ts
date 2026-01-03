@@ -55,7 +55,7 @@ const ResolveReport = catchAsync(async (req: Request, res: Response) => {
 
 // get all reports
 const GetAllReports = catchAsync(async (req: Request, res: Response) => {
-  const reports = await ReportService.getAllReports();
+  const reports = await ReportService.getAllReports(req.query);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

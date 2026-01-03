@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import AppError from '../../ErrorHandler/AppError';
 import Report from './report.model';
@@ -22,16 +23,20 @@ const resolveReport = async (reportId: string) => {
 };
 
 // get all reports
-const getAllReports = async () => {
-  const select = 'author reportBy title description status createdAt updatedAt';
+const getAllReports = async (query: any) => {
+  const select = 'author reportTo title description status createdAt updatedAt';
   const populate = [
     { path: 'author', select: 'name email image phone' },
-    { path: 'reportBy', select: 'name email image phone' },
+    { path: 'reportTo', select: 'name email image phone' },
   ];
 
+  const filters = query.status ? { status: query.status } : {};
+
   const res = await ReportBaseService.findWithPagination({
+    filters,
     select,
     populate,
+    ...query,
     sort: { createdAt: -1, status: 1 },
   });
   if (!res) throw new AppError(httpStatus.NOT_FOUND, 'No reports found');
@@ -44,7 +49,7 @@ const getSingleReport = async (reportId: string) => {
   const populate = [
     { path: 'author', select: 'name email image phone' },
 
-    { path: 'reportBy', select: 'name email image phone' },
+    { path: 'reportTo', select: 'name email image phone' },
   ];
 
   const res = await Report.findById(reportId).populate(populate).select(select);

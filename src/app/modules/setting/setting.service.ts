@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { documentName } from './document.const';
 import { IDocument } from './document.interface';
 import Document from './document.model';
 
 // update document
-const getDocument = async (name: string) => {
+const getContent = async (name: keyof typeof documentName) => {
   let document: any;
   document = await Document.findOne({ name }).select('-isDeleted -__v -name');
   if (!document)
@@ -16,7 +17,10 @@ const getDocument = async (name: string) => {
 };
 
 // update document
-const updateDocument = async (name: string, payload: Partial<IDocument>) => {
+const updateContent = async (
+  name: keyof typeof documentName,
+  payload: Partial<IDocument>,
+) => {
   let document: any;
 
   document = await Document.findOne({ name }).select('-isDeleted -__v');
@@ -29,5 +33,5 @@ const updateDocument = async (name: string, payload: Partial<IDocument>) => {
   return document;
 };
 
-const settingService = { getDocument, updateDocument };
+const settingService = { getContent, updateContent };
 export default settingService;
