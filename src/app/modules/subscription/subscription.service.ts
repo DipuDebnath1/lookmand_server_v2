@@ -54,59 +54,6 @@ const deleteSubscription = async (id: string) => {
   return deletedRes;
 };
 
-// subscription service object
-
-// const basic = {
-//   price: 0,
-//   service: [
-//     'Unlimited conversations',
-//     '2 Service creations',
-//     '❌ Add creations',
-//     '❌ User quote search notifications',
-//   ],
-// };
-
-// const standard = {
-//   price: 9.99,
-//   service: [
-//     'Unlimited conversations',
-//     '5 Service creations',
-//     '❌ Add creations',
-//     'User quote search notifications',
-//   ],
-// };
-// const premium = {
-//   price: 19.99,
-//   service: [
-//     'Unlimited conversations',
-//     '10 Service creations',
-//     '1 Add creations',
-//     'User quote search notifications',
-//   ],
-// };
-
-// const updateAllSubscriptions = async () => {
-//   const subscriptions = await Subscription.find();
-//   for (const sub of subscriptions) {
-//     if (sub.title === 'Basic') {
-//       sub.description = basic.service;
-//       sub.price = basic.price;
-//     } else if (sub.title === 'Standard') {
-//       sub.description = standard.service;
-//       sub.price = standard.price;
-//     } else if (sub.title === 'Premium') {
-//       sub.description = premium.service;
-//       sub.price = premium.price;
-//     }
-//   }
-//   const res = await Promise.all(
-//     subscriptions.map(async (sub) => {
-//       await sub.save();
-//     }),
-//   );
-//   console.log(res);
-// };
-// updateAllSubscriptions();
 
 const SubscriptionService = {
   createSubscription,

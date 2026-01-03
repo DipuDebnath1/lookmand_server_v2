@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
 import { ITransaction } from './transaction.type';
+import { transactionStatuses } from './transation.const';
 
 const transactionSchema = new Schema<ITransaction>(
   {
@@ -17,7 +18,7 @@ const transactionSchema = new Schema<ITransaction>(
     transactionId: { type: String, required: true, unique: true },
     status: {
       type: String,
-      enum: ['success', 'failed', 'cancelled'],
+      enum: Object.values(transactionStatuses),
       required: true,
     },
   },

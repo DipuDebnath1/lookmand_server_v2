@@ -1,7 +1,12 @@
+import { bookingStatuses } from '../serviceBooking/const';
 import ServiceBooking from '../serviceBooking/serviceBooking.model';
+import Subscription from '../subscription/subscription.model';
 import Transaction from '../transaction/transaction.model';
+import { transactionStatuses } from '../transaction/transation.const';
 import { User } from '../user';
 import { Roles } from '../user/const';
+
+const { accepted, pending, completed } = bookingStatuses;
 
 // Get dashboard statistics
 const dashboardServiceStatistics = async () => {
@@ -19,24 +24,22 @@ const dashboardServiceStatistics = async () => {
 
   // total active bookings count
   const activeBookingsCount = ServiceBooking.countDocuments({
-    isDeleted: false,
-    status: 'accepted',
+    status: { $in: [accepted, pending] },
   });
 
   // total completed booking
   const completedBookingsCount = ServiceBooking.countDocuments({
-    isDeleted: false,
-    status: 'completed',
+    status: completed,
   });
 
   // total subscriptions count
-  const totalSubscriptionsCount = ServiceBooking.countDocuments({
+  const totalSubscriptionsCount = Subscription.countDocuments({
     isDeleted: false,
   });
 
   // total revenue calculate
   const totalRevenue = Transaction.aggregate([
-    { $match: { status: 'success' } },
+    { $match: { status: transactionStatuses.success } },
     { $group: { _id: null, total: { $sum: '$amount' } } },
   ]);
 

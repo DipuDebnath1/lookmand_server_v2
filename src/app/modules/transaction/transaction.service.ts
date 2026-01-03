@@ -3,19 +3,18 @@ import httpStatus from 'http-status';
 import Transaction from './transaction.model';
 import { ITransaction } from './transaction.type';
 import AppError from '../../ErrorHandler/AppError';
-import { PipelineStage } from 'mongoose';
+import mongoose, { PipelineStage } from 'mongoose';
 import { TransactionBaseService } from '../../../service';
 
-const paymentResult = {
-  amount: 100,
-  transactionId: Date.now().toString(),
-  status: 'success',
-}; // Mock payment result
-
 // create transaction
-const saveTransactionInfo = async (payload: ITransaction) => {
+const saveTransactionInfo = async (
+  payload: ITransaction,
+  session: mongoose.ClientSession,
+) => {
   try {
-    const res = await Transaction.create({ ...payload, ...paymentResult });
+    const res = await Transaction.create([payload], {
+      session,
+    });
     if (!res)
       throw new AppError(httpStatus.BAD_GATEWAY, 'Transaction creation failed');
     return res;

@@ -8,30 +8,33 @@ import {
   SubscriptionDirectPurchasePermission,
   SubscriptionPackageName,
 } from '../subscription/const';
-import Subscription from '../subscription/subscription.model';
 import { SubscriptionPurchaseStatus } from './const';
 import SubscriptionPurchase from './SubscriptionPurchases.model';
 import { ISubscriptionPurchasePopulated } from './subscriptionPurchases.type';
+import { ISubscription } from '../subscription/subscription.type';
+import mongoose from 'mongoose';
 
 // Main function to create a subscription purchase
-const subscriptionPurchase = async (
-  author: string,
-  subscriptionId: string,
-  directPurchase: boolean,
-) => {
-  const subscription = await Subscription.findById(subscriptionId).select(
-    'title duration durationType access',
-  );
+const subscriptionPurchase = async (payload: {
+  author: string;
+  subscriptionId: string;
+  directPurchase: boolean;
+  subscription: Partial<ISubscription>;
+  session: mongoose.ClientSession | null;
+}) => {
+  // const subscription = await Subscription.findById(subscriptionId).select(
+  //   'title duration durationType access',
+  // );
 
-  // Check if subscription exists
-  if (!subscription)
-    throw new AppError(httpStatus.BAD_REQUEST, 'Subscription not found');
+  // // Check if subscription exists
+  // if (!subscription)
+  //   throw new AppError(httpStatus.BAD_REQUEST, 'Subscription not found');
 
   // If it's a direct purchase, check if the subscription allows it
   if (
-    directPurchase &&
+    payload.directPurchase &&
     !Object.keys(SubscriptionDirectPurchasePermission).includes(
-      subscription.title,
+      payload.subscription.title as string,
     )
   ) {
     throw new AppError(
@@ -42,10 +45,10 @@ const subscriptionPurchase = async (
 
   // check is active any subscription purchase exists can't purchase basic
 
-  if (subscription.title === SubscriptionPackageName.Basic) {
+  if (payload.subscription.title === SubscriptionPackageName.Basic) {
     //
     const existingActivePurchase = await SubscriptionPurchase.findOne({
-      author,
+      author: payload.author,
       status: SubscriptionPurchaseStatus.active,
       endDate: { $gt: new Date() },
     });
@@ -61,23 +64,30 @@ const subscriptionPurchase = async (
 
   // Calculate the endDate based on the subscription duration and type
   const endDate = calculateEndDate(
-    subscription.duration,
-    subscription.durationType,
+    payload!.subscription!.duration!,
+    payload!.subscription!.durationType!,
   );
 
-  // Create the subscription purchase document
-  const subscriptionPurchase = await SubscriptionPurchase.create({
-    author,
-    subscription: subscriptionId,
+  const subscriptionPurchaseCreatePayload = {
+    author: payload.author,
+    subscription: payload.subscriptionId,
     startDate: new Date(),
     endDate: endDate,
-    access: subscription.access,
+    access: payload.subscription.access,
     status: SubscriptionPurchaseStatus.active,
-  });
+  };
+
+  // Create the subscription purchase document
+  const subscriptionPurchase = await SubscriptionPurchase.create(
+    [subscriptionPurchaseCreatePayload],
+    {
+      session: payload.session || undefined,
+    },
+  );
 
   // Schedule a job to handle subscription expiration
   setAgendaSchedule(AgendaJobNames.SubscriptionExpire, endDate, {
-    _id: subscriptionPurchase._id,
+    _id: subscriptionPurchase[0]._id,
   });
 
   return subscriptionPurchase;
