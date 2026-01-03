@@ -29,6 +29,8 @@ const userSchema = new Schema<TUser>(
     image: {
       type: String,
       required: false,
+      default:
+        'https://github.com/DipuDebnath1/image_server/blob/main/author.png',
     },
     isEmailVerified: {
       type: Boolean,
