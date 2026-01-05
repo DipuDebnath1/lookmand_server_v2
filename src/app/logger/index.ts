@@ -13,8 +13,9 @@ const myFormat = printf(({ level, message, label, timestamp }: any) => {
   const h = date.getHours();
   const m = date.getMinutes();
   const s = date.getSeconds();
+  const ms = date.getMilliseconds();
 
-  return `${date.toDateString()} ${h}:${m}:${s} [${label}] ${level}: ${message}`;
+  return `${date.toDateString()} ${h}:${m}:${s}:${ms} [${label}] ${level}: ${message}`;
 });
 
 const logDir = path.join(process.cwd(), 'logs', 'winston');

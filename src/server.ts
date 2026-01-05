@@ -1,6 +1,6 @@
 import http from 'http';
 import mongoose from 'mongoose';
-import socketIo, { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer } from 'socket.io';
 import app from './app';
 import { logger } from './app/logger';
 import config from './config';
@@ -26,7 +26,7 @@ async function main() {
 
     // Initialize Socket.io server
     const socketServer = http.createServer();
-    const io: SocketIOServer = new socketIo.Server(socketServer, {
+    const io: SocketIOServer = new SocketIOServer(socketServer, {
       cors: soketCorsOption,
     });
 

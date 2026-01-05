@@ -30,7 +30,7 @@ const userSchema = new Schema<TUser>(
       type: String,
       required: false,
       default:
-        'https://github.com/DipuDebnath1/image_server/blob/main/author.png',
+        'https://res.cloudinary.com/dl2okzz5j/image/upload/v1767591503/bin_am5epo.jpg',
     },
     isEmailVerified: {
       type: Boolean,

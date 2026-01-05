@@ -97,7 +97,9 @@ const UserSelfServiceInquiries = catchAsync(
           isDeleted: false,
         },
         select: ServiceInquiryPopulate.fields,
-        populate: [],
+        populate: [
+          { ...ServiceInquiryPopulate.subCategory, select: 'name image' },
+        ],
         sort: { createdAt: -1 },
         ...req.query,
       },

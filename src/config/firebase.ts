@@ -6,7 +6,7 @@ async function initializeFirebase() {
   try {
     // Dynamically import the service account JSON file
     const serviceAccount = await import(
-      path.join(__dirname, 'serviceAccountKey.json')
+      path.join(__dirname, '../../serviceAccountKey.json')
     );
 
     // Initialize Firebase Admin SDK
