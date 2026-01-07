@@ -146,11 +146,45 @@ const AcceptedPostInquiry = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// Accept post inquiry
+const DeletePostInquiry = catchAsync(async (req: Request, res: Response) => {
+  const { user }: any = req;
+  const { inquiryId } = req.params;
+
+  if (!Types.ObjectId.isValid(inquiryId))
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid inquiry ID');
+
+  // delete service inquiry
+  const bookingResponse = await ServiceInquiryBaseService.findOneAndUpdate(
+    {
+      _id: new ObjectId(inquiryId),
+      author: new ObjectId(user._id),
+      isDeleted: false,
+    },
+    { isDeleted: true },
+  );
+
+  if (!bookingResponse)
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      'Service inquiry not found or already deleted',
+    );
+
+  // send response
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Deleted service inquiry successfully',
+    data: {},
+  });
+});
+
 const ServiceInquiryController = {
   AddNewServiceInquiry,
   AllServiceInquiries,
   UserSelfServiceInquiries,
   AcceptedPostInquiry,
+  DeletePostInquiry,
 };
 
 export default ServiceInquiryController;

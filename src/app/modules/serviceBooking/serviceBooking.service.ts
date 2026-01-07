@@ -62,6 +62,20 @@ const getUserBookings = async (authorId: string, query: any) => {
         from: 'businessprofiles',
         localField: 'service.author',
         foreignField: 'author',
+        as: 'service.profile',
+      },
+    },
+    {
+      $unwind: {
+        path: '$service.profile',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'service.author',
+        foreignField: '_id',
         as: 'service.author',
       },
     },
@@ -85,14 +99,18 @@ const getUserBookings = async (authorId: string, query: any) => {
           name: '$service.name',
           description: '$service.description',
           image: '$service.image',
+
           subCategory: {
             _id: '$service.subCategory._id',
             name: '$service.subCategory.name',
           },
           author: {
-            _id: '$service.author._id',
-            name: '$service.author.name',
-            image: '$service.author.image',
+            authorId: '$service.author._id',
+            _id: '$service.profile._id',
+            name: '$service.profile.name',
+            image: '$service.profile.image',
+            phone: '$service.profile.phone',
+            email: '$service.author.email',
           },
         },
       },

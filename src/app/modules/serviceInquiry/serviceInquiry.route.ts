@@ -31,4 +31,10 @@ router.post(
   ServiceInquiryController.AcceptedPostInquiry,
 );
 
+router.delete(
+  '/:inquiryId/delete',
+  auth(Roles.USER),
+  ServiceInquiryController.DeletePostInquiry,
+);
+
 export default router;
