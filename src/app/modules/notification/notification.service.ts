@@ -66,18 +66,20 @@ class NotificationService {
     ];
 
     // base filters
-    let filters: any = { user: new Object(userId) };
+    let filters: any = {};
+
+    if (role === 'user') filters.user = new ObjectId(userId);
 
     // admin and superAdmin can see all notifications
     if (role === 'admin' || role === 'superAdmin')
       filters = {
         $or: [{ role: 'admin' }, { user: new Object(userId) }],
-        isDeleted: false,
       };
 
     // provider can see provider and general notifications
     if (role === 'provider') {
       filters = {
+        user: new Object(userId),
         createdAt: {
           $gte: new Date(SearchQuoteDate),
         },
@@ -94,7 +96,6 @@ class NotificationService {
     });
 
     this.markAllNotificationAsRead(userId);
-
     return res;
   }
 

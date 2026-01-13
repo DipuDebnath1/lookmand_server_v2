@@ -6,7 +6,9 @@ import httpStatus from 'http-status';
 import sendResponse from '../../utils/sendResponse';
 import catchAsync from '../../utils/catchAsync';
 import { ImageUrl } from '../../utils/urlAddInUploadedImage';
-
+import { UserServices } from '../user';
+import { Types } from 'mongoose';
+const { ObjectId } = Types;
 // Controller for handling business profile operations
 // Create or update business profile
 const CreateOrUpdateProfile = catchAsync(
@@ -76,9 +78,30 @@ const SetAbility = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// featured providers
+const GetFeaturedProviders = catchAsync(async (req: Request, res: Response) => {
+  const { category } = req.query;
+
+  if (category && ObjectId.isValid(category as string) === false) {
+    throw new Error('valid Category is required');
+  }
+
+  const featuredProviders = await UserServices.getFeaturedProviders(
+    category as string,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Featured providers fetched successfully',
+    success: true,
+    data: featuredProviders,
+  });
+});
+
 export default {
   CreateOrUpdateProfile,
   FindProfile,
   ProviderSelfProfile,
   SetAbility,
+  GetFeaturedProviders,
 };

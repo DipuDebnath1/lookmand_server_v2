@@ -17,7 +17,8 @@ class CategoryServices {
     categoryId: string,
     query?: any,
   ): Promise<ICategory | null> {
-    const select = query?.select || 'name description image isDeleted';
+    const select =
+      query?.select || 'name description image bannerImage isDeleted';
 
     const category = await CategoryBaseService.findById(categoryId, { select });
     return category;

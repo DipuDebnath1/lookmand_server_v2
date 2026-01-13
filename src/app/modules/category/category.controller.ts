@@ -67,11 +67,11 @@ export const CategoryController = {
     // Validate required image files
     const files = req?.files as { [fieldname: string]: Express.Multer.File[] };
 
-    if (!files || !files.image || files.image.length < 1)
+    if (files && files.image && files.image.length > 0)
       req.body.image = ImageUrl(files.image[0]);
 
     // Banner image is optional
-    if (files && 'bannerImage' in files && files.bannerImage.length > 0)
+    if (files && files.bannerImage && files.bannerImage.length > 0)
       req.body.bannerImage = ImageUrl(files.bannerImage[0]);
 
     if (Object.keys(req.body).length === 0)

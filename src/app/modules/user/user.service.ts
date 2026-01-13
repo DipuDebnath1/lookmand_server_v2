@@ -8,7 +8,7 @@ import { User } from './user.model';
 import { sendOtpVerificationMail } from '../../../config/mailService/sendOtp';
 import generateOtp from '../../utils/genarateOtp';
 import { UserBaseService } from '../../../service';
-import { Types } from 'mongoose';
+import { PipelineStage, Types } from 'mongoose';
 const { ObjectId } = Types;
 
 // **********USER SERVICES**********
@@ -77,6 +77,7 @@ const updateUserProfile = async (
   return updatedUser;
 };
 
+// get all users
 const getAllUsers = async (query: any) => {
   const allowRoles = ['user', 'provider'];
 
@@ -85,11 +86,64 @@ const getAllUsers = async (query: any) => {
   if (query.role && allowRoles.includes(query.role)) {
     filter.role = query.role;
   }
-  const result = await UserBaseService.findMany({
-    filters: filter,
-    ...query,
-    select: 'name email role image phone createdAt',
-  });
+  const result = await UserBaseService.aggregateWithPagination([
+    { $match: filter },
+    {
+      $lookup: {
+        from: 'businessprofiles',
+        localField: '_id',
+        foreignField: 'author',
+        as: 'businessProfile',
+      },
+    },
+    {
+      $unwind: {
+        path: '$businessProfile',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'businessProfile.serviceCategory',
+        foreignField: '_id',
+        as: 'businessProfile.serviceCategory',
+      },
+    },
+    {
+      $unwind: {
+        path: '$businessProfile.serviceCategory',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $project: {
+        name: 1,
+        email: 1,
+        role: 1,
+        image: 1,
+        phone: 1,
+        location: 1,
+        createdAt: 1,
+        businessProfile: {
+          _id: 1,
+          name: 1,
+          phone: 1,
+          description: 1,
+          region: 1,
+          location: 1,
+          image: 1,
+          serviceCategory: {
+            name: 1,
+            image: 1,
+          },
+          isProfileComplete: 1,
+          availability: 1,
+        },
+      },
+    },
+  ]);
   return result;
 };
 
@@ -104,6 +158,86 @@ const deleteAccount = async (userId: string) => {
   return user;
 };
 
+// get featured providers
+const getFeaturedProviders = async (category: string) => {
+  const pipeline: PipelineStage[] = [
+    { $match: { role: 'provider', isDeleted: false } },
+    {
+      $lookup: {
+        from: 'businessprofiles',
+        localField: '_id',
+        foreignField: 'author',
+        as: 'businessProfile',
+      },
+    },
+    {
+      $unwind: {
+        path: '$businessProfile',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+  ];
+
+  if (category) {
+    pipeline.push({
+      $match: {
+        'businessProfile.serviceCategory': new ObjectId(category),
+      },
+    });
+  }
+
+  pipeline.push(
+    // get services and average rating
+    {
+      $lookup: {
+        from: 'services',
+        localField: 'businessProfile.author',
+        foreignField: 'author',
+        as: 'services',
+      },
+    },
+    {
+      $lookup: {
+        from: 'reviews',
+        localField: 'services._id',
+        foreignField: 'service',
+        as: 'reviews',
+      },
+    },
+    {
+      $addFields: {
+        averageRating: { $avg: '$reviews.rating' },
+        totalRatings: { $size: '$reviews' },
+      },
+    },
+
+    // Project necessary fields
+    {
+      $project: {
+        name: '$businessProfile.name',
+        email: '$businessProfile.email',
+        phone: '$businessProfile.phone',
+        image: '$businessProfile.image',
+        description: '$businessProfile.description',
+        region: '$businessProfile.region',
+        author: '$businessProfile.author',
+        averageRating: 1,
+        totalRatings: 1,
+      },
+    },
+    {
+      $sort: { totalRatings: -1, averageRating: -1 },
+    },
+    {
+      $limit: 10,
+    },
+  );
+
+  const providers = await UserBaseService.aggregate(pipeline);
+
+  return providers;
+};
+
 export const UserServices = {
   createUser,
   getUserByEmail,
@@ -112,4 +246,5 @@ export const UserServices = {
   updateUserProfile,
   getAllUsers,
   deleteAccount,
+  getFeaturedProviders,
 };

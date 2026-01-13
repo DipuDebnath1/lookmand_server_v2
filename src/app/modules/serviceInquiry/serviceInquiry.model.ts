@@ -5,7 +5,7 @@ import { ServiceInquiryStatuses } from './const';
 
 const serviceInquirySchema = new Schema<IServiceInquiry>(
   {
-    author: { type: Schema.Types.ObjectId, required: false },
+    author: { type: Schema.Types.ObjectId, ref: 'User', required: false },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     subCategory: {
       type: Schema.Types.ObjectId,

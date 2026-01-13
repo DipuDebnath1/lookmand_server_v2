@@ -1,7 +1,7 @@
 export const documentName = {
   about: 'about',
-  privacyPolicy: 'privacy-policy',
-  termsAndConditions: 'terms-and-conditions',
-  hostPolicy: 'host-policy',
-  contactUs: 'contact-us',
+  privacyPolicy: 'privacyPolicy',
+  termsAndConditions: 'termsAndConditions',
+  hostPolicy: 'hostPolicy',
+  contactUs: 'contactUs',
 } as const;

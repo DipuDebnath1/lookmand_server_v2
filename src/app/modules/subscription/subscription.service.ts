@@ -29,7 +29,7 @@ const getAllSubscriptions = async (query: any) => {
 // get single subscription
 const getSingleSubscription = async (id: string) => {
   const res = await Subscription.findById(id).select(
-    'title price duration description durationType',
+    'title price duration description access durationType',
   );
   return res;
 };
@@ -53,7 +53,6 @@ const deleteSubscription = async (id: string) => {
   const deletedRes = await res.save();
   return deletedRes;
 };
-
 
 const SubscriptionService = {
   createSubscription,

@@ -99,8 +99,10 @@ const getAllServices = async (query?: any) => {
 
   if (subCategory && ObjectId.isValid(subCategory)) {
     matchSubCategory.subCategory = new ObjectId(subCategory);
-  } else {
+  } else if (query.subCategoryIds) {
     matchSubCategory.subCategory = query.subCategoryIds;
+  } else {
+    delete query.subCategoryIds;
   }
 
   const pipeline: PipelineStage[] = [

@@ -40,6 +40,11 @@ router.get(
   BusinessProfileController.ProviderSelfProfile,
 );
 
+router.get(
+  '/featured-providers',
+  BusinessProfileController.GetFeaturedProviders,
+);
+
 // Route to find business profile
 router.get('/:id', BusinessProfileController.FindProfile);
 export default router;
