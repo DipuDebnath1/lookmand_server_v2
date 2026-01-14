@@ -11,7 +11,10 @@ const { ObjectId } = Types;
 class BusinessProfileService {
   // Find or create a business profile for the user
   async findOrCreateProfile(authorId: string) {
-    let profile = await BusinessProfile.findOne({ author: authorId });
+    let profile = await BusinessProfile.findOne({ author: authorId }).populate(
+      'serviceCategory',
+      'name',
+    );
 
     const subscribeInfo = await SubscriptionPurchase.findOne({
       author: authorId,

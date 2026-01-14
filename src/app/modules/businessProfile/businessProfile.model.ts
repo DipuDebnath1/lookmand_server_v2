@@ -52,7 +52,7 @@ const businessProfileSchema = new Schema<IBusinessProfile>(
     image: { type: String, required: false },
     serviceCategory: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'ServiceCategory',
+      ref: 'Category',
       default: null,
       required: false,
     },

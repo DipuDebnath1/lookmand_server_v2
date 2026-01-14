@@ -248,7 +248,7 @@ const getAllServices = async (query?: any) => {
         },
         profileDetails: {
           _id: '$profileDetails._id',
-          businessName: '$profileDetails.businessName',
+          name: '$profileDetails.name',
           region: '$profileDetails.region',
           location: '$profileDetails.location',
           image: '$profileDetails.image',
@@ -557,6 +557,21 @@ const providerServicesByAuthorId = async (
   };
 };
 
+// provider self services
+const ProviderSelfServices = async (authorId: string) => {
+  const services = await ProviderBaseService.findMany({
+    filters: { author: new ObjectId(authorId), isDeleted: false },
+    select: '_id subCategory',
+    populate: [
+      {
+        path: 'subCategory',
+        select: 'name',
+      },
+    ],
+  });
+  return services;
+};
+
 // provider total services available count
 const getProviderTotalServicesCount = async (authorId: string) => {
   const res = await Service.countDocuments({
@@ -690,34 +705,7 @@ const ProviderService = {
   serviceQuoteNotification,
   getProviderAllReviews,
   getServiceById,
+  ProviderSelfServices,
 };
 
 export default ProviderService;
-
-// const createServices = async (authorId: string) => {
-//   const profile = await BusinessProfile.findOne({
-//     author: new ObjectId(authorId),
-//   }).select('serviceCategory');
-
-//   const subcategory = await SubCategoryBaseService.findMany({
-//     filters: { category: profile?.serviceCategory, isDeleted: false },
-//     select: '_id',
-//   });
-
-//   for (const service of subcategory) {
-//     const isExist = await Service.findOne({
-//       author: new ObjectId(authorId),
-//       subCategory: service._id,
-//       isDeleted: false,
-//     });
-
-//     if (isExist) continue;
-//     const newService = await Service.create({
-//       author: new ObjectId(authorId),
-//       subCategory: service._id,
-//     });
-
-//     console.log(newService);
-//   }
-// };
-// createServices('6954afde08f8f1212842bcb5');

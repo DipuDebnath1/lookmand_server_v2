@@ -76,6 +76,19 @@ const ProviderServicesByAuthorId = catchAsync(
   },
 );
 
+// get services by provider
+const ProviderSelfServices = catchAsync(async (req: Request, res: Response) => {
+  const { user }: any = req;
+  const authorId = user._id;
+  const services = await providerServiceService.ProviderSelfServices(authorId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'services retrieved successfully',
+    success: true,
+    data: services,
+  });
+});
+
 // delete service by provider or admin
 const deleteServiceById = catchAsync(async (req: Request, res: Response) => {
   const { user }: any = req;
@@ -133,6 +146,7 @@ const ProviderServiceController = {
   getSingleService,
   ProviderServicesByAuthorId,
   searchServiceQuoteByProvider,
+  ProviderSelfServices,
 };
 
 export default ProviderServiceController;

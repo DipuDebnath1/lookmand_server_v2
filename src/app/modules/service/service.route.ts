@@ -37,6 +37,12 @@ router.get(
   ProviderServiceController.ProviderServicesByAuthorId,
 );
 
+router.get(
+  '/self',
+  auth(Roles.PROVIDER),
+  ProviderServiceController.ProviderSelfServices,
+);
+
 router.delete(
   '/:serviceId',
   auth(Roles.COMMON_ADMIN_PROVIDER),
