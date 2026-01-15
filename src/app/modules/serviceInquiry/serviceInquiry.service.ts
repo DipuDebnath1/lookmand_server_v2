@@ -42,7 +42,7 @@ const AllServiceInquiries = async (providerId: string, query: any) => {
       category: profile?.serviceCategory,
       status: ServiceInquiryStatuses.active,
       // only future inquiries add 2 day buffer time
-      date: { $gte: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) },
+      date: { $gte: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
       isDeleted: false,
     },
     select: ServiceInquiryPopulate.fields,

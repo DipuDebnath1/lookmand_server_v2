@@ -54,8 +54,22 @@ const removeFavoriteService = catchAsync(async (req, res) => {
   });
 });
 
+// remove favorite service
+const FavoriteServiceId = catchAsync(async (req, res) => {
+  const { user }: any = req;
+  const favoriteServiceIds =
+    await favoriteServiceService.getAllFavoriteServiceId(user?._id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Favorite service IDs retrieved successfully',
+    data: favoriteServiceIds,
+  });
+});
+
 export default {
   AddFFavoriteService,
   getSelfFavoriteService,
   removeFavoriteService,
+  FavoriteServiceId,
 };

@@ -187,6 +187,8 @@ const getAllFavoriteService = async (author: string, query?: any) => {
     {
       $project: {
         _id: 1,
+        service: '$providerService._id',
+
         subCategory: {
           name: '$subCategoryDetails.name',
           _id: '$subCategoryDetails._id',
@@ -257,8 +259,22 @@ const removeFavoriteService = async (author: string, id: string) => {
   return res;
 };
 
+// all favorite service functions export
+const getAllFavoriteServiceId = async (author: string) => {
+  const match = { author: new ObjectId(author), isDeleted: false };
+
+  const serviceIds = await FavoriteService.find(match).select(
+    'providerService -_id',
+  );
+
+  const res = serviceIds.map((service) => service.providerService);
+
+  return res;
+};
+
 export default {
   createFavoriteService,
   getAllFavoriteService,
   removeFavoriteService,
+  getAllFavoriteServiceId,
 };

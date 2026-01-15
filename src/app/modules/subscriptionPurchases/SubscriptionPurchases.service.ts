@@ -96,7 +96,7 @@ const subscriptionPurchase = async (payload: {
 // get provider subscription current plan
 const getProviderSubscriptionCurrentPlan = async (providerId: string) => {
   const res = (await SubscriptionPurchase.findOne({ author: providerId })
-    .select('subscription startDate endDate status createdAt')
+    .select('subscription startDate endDate status createdAt access')
     .populate('subscription', 'title')
     .sort({ createdAt: -1 })) as ISubscriptionPurchasePopulated | null;
 

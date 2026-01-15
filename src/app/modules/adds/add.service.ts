@@ -18,7 +18,12 @@ const createAdd = async (payload: IAdds) => {
     author: payload.author,
     isDeleted: false,
   });
-  if (existAdd) throw new Error('You have already created an add!');
+  if (existAdd) {
+    return await Adds.updateOne(
+      { _id: existAdd._id },
+      { $set: { content: payload.content } },
+    );
+  }
 
   return Adds.create(payload);
 };

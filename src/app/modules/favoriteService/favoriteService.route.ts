@@ -16,6 +16,12 @@ router.get(
   favoriteServiceController.getSelfFavoriteService,
 );
 
+router.get(
+  '/ids',
+  auth(Roles.USER),
+  favoriteServiceController.FavoriteServiceId,
+);
+
 router.delete(
   '/:id',
   auth(Roles.USER),
