@@ -14,6 +14,8 @@ import { ISubscriptionPurchasePopulated } from './subscriptionPurchases.type';
 import { ISubscription } from '../subscription/subscription.type';
 import mongoose from 'mongoose';
 
+const ObjectId = mongoose.Types.ObjectId;
+
 // Main function to create a subscription purchase
 const subscriptionPurchase = async (payload: {
   author: string;
@@ -134,11 +136,22 @@ const checkAccess = async (
   return access;
 };
 
+const ProviderSubscriptionAccessFields = async (authorId: string) => {
+  return await SubscriptionPurchase.findOne({
+    author: new ObjectId(authorId),
+    status: SubscriptionPurchaseStatus.active,
+    endDate: { $gt: new Date() },
+  })
+    .sort({ createdAt: -1 })
+    .select('access');
+};
+
 const SubscriptionPurchasesService = {
   subscriptionPurchase,
   getProviderSubscriptionCurrentPlan,
   isValidSubscription,
   checkAccess,
+  ProviderSubscriptionAccessFields,
 };
 
 export default SubscriptionPurchasesService;

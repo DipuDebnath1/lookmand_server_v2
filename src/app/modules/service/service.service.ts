@@ -15,6 +15,7 @@ import {
 } from '../../../service';
 import { SubscriptionPurchaseStatus } from '../subscriptionPurchases/const';
 import { SubscriptionPackageName } from '../subscription/const';
+import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
 
 const ObjectId = Types.ObjectId;
 
@@ -510,9 +511,11 @@ const providerServicesByAuthorId = async (
 ): Promise<any> => {
   const filters: any = { author: new ObjectId(authorId) };
 
+  // get profile info
   const profile = await ProfileBaseService.findOne({
     filters: filters,
-    select: 'name image region isProfileComplete location ability phone email',
+    select:
+      'name image region isProfileComplete location ability phone email availability',
     populate: [
       {
         path: 'author',
@@ -521,6 +524,13 @@ const providerServicesByAuthorId = async (
     ],
   });
 
+  // get provider subscriptions access
+  const subscriptionAccess =
+    await SubscriptionPurchasesService.ProviderSubscriptionAccessFields(
+      authorId,
+    );
+
+  // get services info
   const services = ProviderBaseService.aggregateWithPagination(
     [
       { $match: { ...filters, isDeleted: false } },
@@ -552,6 +562,9 @@ const providerServicesByAuthorId = async (
   // console.log(services.data);
   return {
     profile: profileData,
+    accessibleBySubscription: subscriptionAccess
+      ? subscriptionAccess.access
+      : [],
     services: servicesData.data,
     pagination: servicesData.pagination,
   };

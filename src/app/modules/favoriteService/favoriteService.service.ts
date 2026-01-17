@@ -46,6 +46,7 @@ const createFavoriteService = async (
   const existingFavorite = await FavoriteService.findOne({
     author: new ObjectId(author),
     providerService: new ObjectId(providerService),
+    isDeleted: false,
   });
 
   if (!existingFavorite || existingFavorite.isDeleted)

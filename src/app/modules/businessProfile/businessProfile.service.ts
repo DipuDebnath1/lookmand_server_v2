@@ -4,8 +4,7 @@ import { UserBaseService } from '../../../service';
 import AppError from '../../ErrorHandler/AppError';
 import BusinessProfile from './businessProfile.model';
 import { IBusinessProfile } from './businessProfile.type';
-import SubscriptionPurchase from '../subscriptionPurchases/SubscriptionPurchases.model';
-import { SubscriptionPurchaseStatus } from '../subscriptionPurchases/const';
+import SubscriptionPurchasesService from '../subscriptionPurchases/SubscriptionPurchases.service';
 const { ObjectId } = Types;
 
 class BusinessProfileService {
@@ -16,14 +15,13 @@ class BusinessProfileService {
       'name',
     );
 
-    const subscribeInfo = await SubscriptionPurchase.findOne({
-      author: authorId,
-      status: SubscriptionPurchaseStatus.active,
-      endDate: { $gt: new Date() },
-    })
-      .sort({ createdAt: -1 })
-      .select('access');
+    // Get subscription access info
+    const subscribeInfo =
+      await SubscriptionPurchasesService.ProviderSubscriptionAccessFields(
+        authorId,
+      );
 
+    //  If profile doesn't exist, create a new one
     if (!profile) {
       const findUser = await UserBaseService.findById(authorId, {
         select: 'role',

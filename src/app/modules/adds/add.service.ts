@@ -53,9 +53,14 @@ const getAllAdds = async (query: {
       },
     },
     {
+      $group: {
+        _id: '$author',
+      },
+    },
+    {
       $lookup: {
         from: 'businessprofiles',
-        localField: 'author',
+        localField: '_id',
         foreignField: 'author',
         as: 'profile',
       },
@@ -68,6 +73,8 @@ const getAllAdds = async (query: {
     $match: { 'profile.region': query.region },
   };
 
+  // basePipeline.push(regionPipeline);
+
   // category filter
   const categoryPipeline: PipelineStage = {
     $match: { 'profile.serviceCategory': new ObjectId(query.category) },
@@ -79,7 +86,7 @@ const getAllAdds = async (query: {
   const addsLookupPipeline: PipelineStage = {
     $lookup: {
       from: 'adds',
-      localField: 'author',
+      localField: '_id',
       foreignField: 'author',
       as: 'addDetails',
     },
@@ -140,6 +147,7 @@ const getAllAdds = async (query: {
       $project: {
         _id: '$addDetails._id',
         profileId: '$profile._id',
+        author: '$profile.author',
         content: '$addDetails.content',
         category: '$profile.serviceCategory',
       },

@@ -166,6 +166,12 @@ const getSingleConversation = async (
     users: { $in: [new ObjectId(userId)] },
     isDeleted: false,
   })
+    .populate([
+      {
+        ...populateConversationPipeline.users,
+        match: { _id: { $ne: new ObjectId(userId) } },
+      },
+    ])
     .select(populateConversationPipeline.felid)
     .lean();
 
