@@ -64,21 +64,22 @@ const createService = async (payload: IService) => {
     filters: {
       author: new ObjectId(payload.author),
       subCategory: new ObjectId(payload.subCategory),
-      isDeleted: false,
     },
   });
 
   // check already exists
-  if (isExist)
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'You have already added this service',
-    );
+  if (isExist) {
+    if (isExist.isDeleted) {
+      // reactivate the deleted service
+      isExist.isDeleted = false;
+      await isExist.save();
+      return isExist;
+    }
+    return isExist;
+  }
 
   // create service
-  const newService = await Service.create(payload);
-
-  return newService;
+  return await Service.create(payload);
 };
 
 // get all service requested by admin
@@ -455,6 +456,7 @@ const getSingleService = async (serviceId: string) => {
         author: {
           _id: '$authorDetails._id',
           name: '$authorDetails.name',
+          email: '$authorDetails.email',
         },
         subCategory: {
           name: '$subCategoryDetails.name',
