@@ -63,13 +63,13 @@ class BusinessProfileService {
 
     // Check if the profile is complete
     const isProfileComplete =
-      (profile.name.trim() || updates.name?.trim()) &&
-      (profile.phone.trim() || updates.phone?.trim()) &&
-      (profile.region.trim() || updates.region?.trim()) &&
-      (profile.location.trim() || updates.location?.trim()) &&
-      (profile.image.trim() || updates.image?.trim()) &&
-      (profile.description.trim() || updates.description?.trim()) &&
-      (profile.serviceCategory || updates.serviceCategory);
+      (profile?.name?.trim() || updates?.name?.trim()) &&
+      (profile?.phone?.trim() || updates?.phone?.trim()) &&
+      (profile?.region?.trim() || updates?.region?.trim()) &&
+      (profile?.location?.trim() || updates?.location?.trim()) &&
+      (profile?.image?.trim() || updates?.image?.trim()) &&
+      (profile?.description?.trim() || updates?.description?.trim()) &&
+      (profile?.serviceCategory || updates?.serviceCategory);
 
     profile.isProfileComplete = !!isProfileComplete;
 

@@ -456,7 +456,6 @@ const getSingleService = async (serviceId: string) => {
         author: {
           _id: '$authorDetails._id',
           name: '$authorDetails.name',
-          email: '$authorDetails.email',
         },
         subCategory: {
           name: '$subCategoryDetails.name',
@@ -472,6 +471,7 @@ const getSingleService = async (serviceId: string) => {
           image: '$profileDetails.image',
           description: '$profileDetails.description',
           phone: '$profileDetails.phone',
+          email: '$authorDetails.email',
           availability: '$profileDetails.availability',
           averageRating: '$averageRating',
           totalReviews: '$totalReviews',
