@@ -23,21 +23,29 @@ const logDir = path.join(process.cwd(), 'logs', 'winston');
 // Utility function to generate file transports for each log level
 const createLogTransports = (level: string, folder: string) => {
   return [
-    new transports.File({
-      level: level, // set the log level for file transport
-      filename: path.join(logDir, folder, 'um-' + level + '.log'),
-      format: combine(myFormat), // No colorization for file transport
-    }),
     new DailyRotateFile({
       level: level, // set the log level for daily rotate file
       filename: path.join(logDir, folder, 'um-%DATE%-' + level + '.log'),
-      datePattern: 'YYYY-MM-DD-HH',
+      datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d',
+      maxSize: '10m',
+      maxFiles: '10d',
       format: combine(myFormat), // No colorization for file transport
     }),
   ];
+};
+
+// ✅ NEW: Combined transport for ALL log levels
+const createCombinedTransport = () => {
+  return new DailyRotateFile({
+    level: 'info', // Captures info, warn, and error (all levels)
+    filename: path.join(logDir, 'combined', 'um-%DATE%-combined.log'),
+    datePattern: 'YYYY-MM-DD',
+    zippedArchive: true,
+    maxSize: '20m',
+    maxFiles: '5d', // keep logs for 5 days
+    format: combine(myFormat),
+  });
 };
 
 // General logger for all log levels (info, warn, error)
@@ -50,6 +58,9 @@ export const logger = createLogger({
       level: 'info', // info and warn go to console
       format: combine(format.colorize(), myFormat),
     }),
+
+    // Combined transport for all log levels
+    createCombinedTransport(),
 
     // Add the transport for each level dynamically
     ...createLogTransports('info', 'successes'),
